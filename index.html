@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Time Viz Component Demo</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f5f5f5;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 2rem;
+    }
+
+    .demo {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-bottom: 2rem;
+    }
+
+    time-viz {
+      height: 500px;
+      display: block;
+    }
+
+    .demo h2 {
+      margin: 0 0 1rem 0;
+      color: #555;
+    }
+
+    .controls {
+      margin-bottom: 1rem;
+      padding: 10px;
+      background: #f8f9fa;
+      border-radius: 4px;
+    }
+
+    button {
+      padding: 8px 16px;
+      margin: 0 8px 8px 0;
+      border: 1px solid #007acc;
+      border-radius: 4px;
+      background: #007acc;
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    button:hover {
+      background: #005a9e;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Time Viz Component Demo</h1>
+
+    <div class="demo">
+      <h2>Interactive Time Series Chart</h2>
+      <div class="controls">
+        <button onclick="loadSampleData()">Load Sample Data</button>
+        <button onclick="loadMultiSeriesData()">Load Multi-Series Data</button>
+        <button onclick="toggleStatic()">Toggle Interactivity</button>
+        <button onclick="toggleCurved()">Toggle Curved Lines</button>
+      </div>
+      <time-viz
+        id="chart1"
+        chart-title="Sample Time Series Data"
+        is-static="false"
+        is-curved="false"
+        x-ticks="6"
+        y-ticks="8"
+      ></time-viz>
+    </div>
+
+    <div class="demo">
+      <h2>Static Chart (No Interaction)</h2>
+      <time-viz
+        id="chart2"
+        chart-title="Static Time Series"
+        is-static="true"
+        format-x-axis="%b %Y"
+      ></time-viz>
+    </div>
+  </div>
+
+  <script type="module" src="./src/index.ts"></script>
+  <script>
+    // Sample data generators
+    function generateTimeSeriesData(seriesName = "default", points = 50, startDate = new Date(2023, 0, 1)) {
+      const data = [];
+      let currentValue = Math.random() * 100 + 50;
+
+      for (let i = 0; i < points; i++) {
+        const date = new Date(startDate);
+        date.setDate(date.getDate() + i * 7); // Weekly data
+
+        currentValue += (Math.random() - 0.5) * 20;
+        currentValue = Math.max(10, Math.min(200, currentValue));
+
+        data.push({
+          date: date,
+          value: Math.round(currentValue * 100) / 100,
+          series: seriesName
+        });
+      }
+
+      return data;
+    }
+
+    function loadSampleData() {
+      const chart = document.getElementById("chart1");
+      const data = generateTimeSeriesData("Sales", 30);
+      chart.data = data;
+    }
+
+    function loadMultiSeriesData() {
+      const chart1 = document.getElementById("chart1");
+      const chart2 = document.getElementById("chart2");
+
+      const salesData = generateTimeSeriesData("Sales", 40);
+      const revenueData = generateTimeSeriesData("Revenue", 40);
+      const profitData = generateTimeSeriesData("Profit", 40);
+
+      const allData = [...salesData, ...revenueData, ...profitData];
+
+      chart1.data = allData;
+      chart2.data = allData;
+    }
+
+    function toggleStatic() {
+      const chart = document.getElementById("chart1");
+      chart.isStatic = !chart.isStatic;
+    }
+
+    function toggleCurved() {
+      const chart = document.getElementById("chart1");
+      chart.isCurved = !chart.isCurved;
+    }
+
+    // Initialize with sample data
+    document.addEventListener("DOMContentLoaded", () => {
+      setTimeout(() => {
+        loadSampleData();
+      }, 100);
+    });
+  </script>
+</body>
+</html>
