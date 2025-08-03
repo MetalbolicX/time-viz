@@ -121,24 +121,65 @@
       return data;
     }
 
+
+    // Wide-format data generator for multiple series
+    function generateWideTimeSeriesData(points = 30, startDate = new Date(2023, 0, 1)) {
+      const data = [];
+      let sales = Math.random() * 100 + 50;
+      let revenue = Math.random() * 100 + 100;
+      let profit = Math.random() * 50 + 20;
+      for (let i = 0; i < points; i++) {
+        const date = new Date(startDate);
+        date.setDate(date.getDate() + i * 7);
+        sales += (Math.random() - 0.5) * 20;
+        revenue += (Math.random() - 0.5) * 30;
+        profit += (Math.random() - 0.5) * 10;
+        data.push({
+          date,
+          sales: Math.round(sales * 100) / 100,
+          revenue: Math.round(revenue * 100) / 100,
+          profit: Math.round(profit * 100) / 100
+        });
+      }
+      return data;
+    }
+
     function loadSampleData() {
       const chart = document.getElementById("chart1");
-      const data = generateTimeSeriesData("Sales", 30);
-      chart.data = data;
+      const data = generateWideTimeSeriesData(30);
+      chart.config = {
+        data: data,
+        x: { accessor: d => d.date, label: "Date" },
+        series: [
+          { accessor: d => d.sales, label: "Sales", color: "blue" },
+          { accessor: d => d.revenue, label: "Revenue", color: "green" },
+          { accessor: d => d.profit, label: "Profit", color: "orange" }
+        ]
+      };
     }
 
     function loadMultiSeriesData() {
       const chart1 = document.getElementById("chart1");
       const chart2 = document.getElementById("chart2");
-
-      const salesData = generateTimeSeriesData("Sales", 40);
-      const revenueData = generateTimeSeriesData("Revenue", 40);
-      const profitData = generateTimeSeriesData("Profit", 40);
-
-      const allData = [...salesData, ...revenueData, ...profitData];
-
-      chart1.data = allData;
-      chart2.data = allData;
+      const data = generateWideTimeSeriesData(40);
+      chart1.config = {
+        data: data,
+        x: { accessor: d => d.date, label: "Date" },
+        series: [
+          { accessor: d => d.sales, label: "Sales", color: "blue" },
+          { accessor: d => d.revenue, label: "Revenue", color: "green" },
+          { accessor: d => d.profit, label: "Profit", color: "orange" }
+        ]
+      };
+      chart2.config = {
+        data: data,
+        x: { accessor: d => d.date, label: "Date" },
+        series: [
+          { accessor: d => d.sales, label: "Sales", color: "blue" },
+          { accessor: d => d.revenue, label: "Revenue", color: "green" },
+          { accessor: d => d.profit, label: "Profit", color: "orange" }
+        ]
+      };
     }
 
     function toggleStatic() {

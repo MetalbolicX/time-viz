@@ -1,12 +1,36 @@
+
 import { LitElement, html, css, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { createRef, ref } from "lit/directives/ref.js";
 import * as d3 from "d3";
 
-interface TimeSeriesDataPoint {
-  date: Date;
-  value: number;
-  series?: string;
+
+type ChartDataRow = Record<string, unknown>;
+
+interface TimeVizSeriesConfig<T = ChartDataRow> {
+  accessor: (row: T) => number;
+  label: string;
+  color?: string;
+  format?: string;
+}
+
+interface TimeVizConfig<T = ChartDataRow> {
+  data: T[];
+  x: {
+    accessor: (row: T) => Date | number;
+    label?: string;
+    format?: string;
+  };
+  series: Array<TimeVizSeriesConfig<T>>;
+  margin?: MarginConfig;
+  isStatic?: boolean;
+  isCurved?: boolean;
+  transitionTime?: number;
+  xTicks?: number;
+  yTicks?: number;
+  formatXAxis?: string;
+  formatYAxis?: string;
+  chartTitle?: string;
 }
 
 interface MarginConfig {
@@ -166,12 +190,13 @@ export class TimeViz extends LitElement {
   @property({ type: String, attribute: "chart-title" })
   declare chartTitle: string;
 
-  @state()
-  private declare _data: TimeSeriesDataPoint[];
 
+  @state()
+  private declare _config: TimeVizConfig;
+  @state()
+  private declare _data: ChartDataRow[];
   @state()
   private declare _selectedSeries: string;
-
   @state()
   private declare _hiddenSeries: Set<string>;
 
@@ -192,39 +217,52 @@ export class TimeViz extends LitElement {
     this._data = [];
     this._selectedSeries = "All";
     this._hiddenSeries = new Set<string>();
+    this._config = {
+      data: [],
+      x: { accessor: (d: ChartDataRow) => d.date as Date },
+      series: [],
+    };
   }
 
-  set data(value: TimeSeriesDataPoint[]) {
-    const oldValue = this._data;
-    this._data = value;
-    this.requestUpdate("data", oldValue);
+  set config(cfg: TimeVizConfig) {
+    this._config = cfg;
+    this._data = cfg.data;
+    this.margin = cfg.margin ?? this.margin;
+    this.isStatic = cfg.isStatic ?? this.isStatic;
+    this.isCurved = cfg.isCurved ?? this.isCurved;
+    this.transitionTime = cfg.transitionTime ?? this.transitionTime;
+    this.xTicks = cfg.xTicks ?? this.xTicks;
+    this.yTicks = cfg.yTicks ?? this.yTicks;
+    this.formatXAxis = cfg.formatXAxis ?? cfg.x.format ?? this.formatXAxis;
+    this.formatYAxis = cfg.formatYAxis ?? this.formatYAxis;
+    this.chartTitle = cfg.chartTitle ?? this.chartTitle;
+    this._selectedSeries = "All";
+    this._hiddenSeries = new Set<string>();
+    this.requestUpdate();
   }
 
-  get data(): TimeSeriesDataPoint[] {
-    return this._data;
-  }
 
   get availableSeries(): string[] {
-    const series = new Set(this._data.map(d => d.series || "default"));
-    return Array.from(series).sort();
+    if (!this._config?.series?.length) return [];
+    return this._config.series.map(s => s.label);
   }
 
-  get filteredData(): TimeSeriesDataPoint[] {
-    if (!this._data.length) return [];
-
-    let filtered = this._data;
-
-    if (this._selectedSeries !== "All") {
-      filtered = filtered.filter(d => (d.series || "default") === this._selectedSeries);
+  get filteredSeries(): TimeVizSeriesConfig[] {
+    if (!this._config?.series?.length) return [];
+    if (this._selectedSeries === "All") {
+      return this._config.series.filter(s => !this._hiddenSeries.has(s.label));
     }
-
-    return filtered.filter(d => !this._hiddenSeries.has(d.series || "default"));
+    return this._config.series.filter(s => s.label === this._selectedSeries && !this._hiddenSeries.has(s.label));
   }
+
 
   protected updated(changedProperties: Map<string | number | symbol, unknown>): void {
-    if (changedProperties.has("_data") ||
-        changedProperties.has("_selectedSeries") ||
-        changedProperties.has("_hiddenSeries")) {
+    if (
+      changedProperties.has("_data") ||
+      changedProperties.has("_selectedSeries") ||
+      changedProperties.has("_hiddenSeries") ||
+      changedProperties.has("_config")
+    ) {
       this._renderChart();
     }
   }
@@ -254,8 +292,9 @@ export class TimeViz extends LitElement {
     URL.revokeObjectURL(url);
   };
 
+
   private _renderChart(): void {
-    if (!this.svgRef.value || !this.filteredData.length) return;
+    if (!this.svgRef.value || !this._data?.length || !this._config?.series?.length) return;
 
     const svg = d3.select(this.svgRef.value);
     svg.selectAll("*").remove();
@@ -263,97 +302,73 @@ export class TimeViz extends LitElement {
     const containerRect = this.svgRef.value.getBoundingClientRect();
     const width = containerRect.width - this.margin.left - this.margin.right;
     const height = containerRect.height - this.margin.top - this.margin.bottom;
-
     if (width <= 0 || height <= 0) return;
 
     const g = svg.append("g")
       .attr("transform", `translate(${this.margin.left},${this.margin.top})`);
 
-    // Scales
-    const xScale = d3.scaleTime()
-      .domain(d3.extent(this.filteredData, (d: TimeSeriesDataPoint) => d.date) as [Date, Date])
-      .range([0, width]);
+    // X scale
+    const xVals = this._data.map(this._config.x.accessor);
+    const xDomain = d3.extent(xVals) as [Date | number, Date | number];
+    const isTime = xDomain[0] instanceof Date;
+    const xScale = isTime
+      ? d3.scaleTime().domain(xDomain as [Date, Date]).range([0, width])
+      : d3.scaleLinear().domain(xDomain as [number, number]).range([0, width]);
 
-    const yScale = d3.scaleLinear()
-      .domain(d3.extent(this.filteredData, (d: TimeSeriesDataPoint) => d.value) as [number, number])
-      .nice()
-      .range([height, 0]);
+    // Y scale (all series)
+    const yVals = this._data.flatMap(row => this.filteredSeries.map(s => s.accessor(row)));
+    const yDomain = d3.extent(yVals) as [number, number];
+    const yScale = d3.scaleLinear().domain(yDomain).nice().range([height, 0]);
 
     // Grid
-    const xGrid = d3.axisBottom(xScale)
-      .tickSize(-height)
-      .tickFormat(() => "");
-
-    const yGrid = d3.axisLeft(yScale)
-      .tickSize(-width)
-      .tickFormat(() => "");
-
-    g.append("g")
-      .attr("class", "grid")
-      .attr("transform", `translate(0,${height})`)
-      .call(xGrid);
-
-    g.append("g")
-      .attr("class", "grid")
-      .call(yGrid);
+    const xGrid = d3.axisBottom(xScale).tickSize(-height).tickFormat(() => "");
+    const yGrid = d3.axisLeft(yScale).tickSize(-width).tickFormat(() => "");
+    g.append("g").attr("class", "grid").attr("transform", `translate(0,${height})`).call(xGrid);
+    g.append("g").attr("class", "grid").call(yGrid);
 
     // Axes
     const xAxis = d3.axisBottom(xScale)
       .ticks(this.xTicks)
-      .tickFormat(d3.timeFormat(this.formatXAxis) as any);
-
+      .tickFormat(
+        isTime
+          ? d3.timeFormat(this.formatXAxis) as any
+          : d3.format(this.formatXAxis) as any
+      );
     const yAxis = d3.axisLeft(yScale)
       .ticks(this.yTicks)
       .tickFormat(d3.format(this.formatYAxis) as any);
+    g.append("g").attr("class", "axis").attr("transform", `translate(0,${height})`).call(xAxis);
+    g.append("g").attr("class", "axis").call(yAxis);
 
-    g.append("g")
-      .attr("class", "axis")
-      .attr("transform", `translate(0,${height})`)
-      .call(xAxis);
-
-    g.append("g")
-      .attr("class", "axis")
-      .call(yAxis);
-
-    // Line generator
-    const line = d3.line<TimeSeriesDataPoint>()
-      .x(d => xScale(d.date))
-      .y(d => yScale(d.value));
-
-    if (this.isCurved) {
-      line.curve(d3.curveMonotoneX);
-    }
-
-    // Group data by series
-    const seriesData = d3.group(this.filteredData, (d: TimeSeriesDataPoint) => d.series || "default");
-
-    // Draw lines
-    seriesData.forEach((data: TimeSeriesDataPoint[], seriesName: string) => {
-      const sortedData = data.sort((a, b) => a.date.getTime() - b.date.getTime());
-
+    // Draw lines for each series
+    for (const serie of this.filteredSeries) {
+      const line = d3.line<ChartDataRow>()
+        .x(d => xScale(this._config.x.accessor(d)))
+        .y(d => yScale(serie.accessor(d)));
+      if (this.isCurved) line.curve(d3.curveMonotoneX);
       g.append("path")
-        .datum(sortedData)
+        .datum(this._data)
         .attr("class", "line")
         .attr("d", line)
-        .style("stroke", this.colorScale(seriesName) as string);
-    });
+        .style("stroke", serie.color || this.colorScale(serie.label) as string);
+    }
 
     // Cursor interaction (only if not static)
     if (!this.isStatic) {
-      this._addCursorInteraction(g, xScale, yScale, width, height, seriesData);
+      this._addCursorInteraction(g, xScale, yScale, width, height);
     }
 
     // Legend
-    this._renderLegend(g, width, seriesData);
+    this._renderLegend(g, width);
   }
+
 
   private _addCursorInteraction(
     g: d3.Selection<SVGGElement, unknown, null, undefined>,
-    xScale: d3.ScaleTime<number, number>,
+    xScale: d3.ScaleTime<number, number> | d3.ScaleLinear<number, number>,
     yScale: d3.ScaleLinear<number, number>,
     width: number,
-    height: number,
-    seriesData: d3.InternMap<string, TimeSeriesDataPoint[]>
+    height: number
   ): void {
     const cursorLine = g.append("line")
       .attr("class", "cursor-line")
@@ -361,12 +376,15 @@ export class TimeViz extends LitElement {
       .attr("y2", height);
 
     const cursorPoints = g.selectAll(".cursor-point")
-      .data(Array.from(seriesData.keys()))
+      .data(this.filteredSeries.map(s => s.label))
       .enter()
       .append("circle")
       .attr("class", "cursor-point")
       .attr("r", 4)
-      .style("stroke", (d: string) => this.colorScale(d) as string);
+      .style("stroke", (d: string) => {
+        const serie = this.filteredSeries.find(s => s.label === d);
+        return serie?.color || this.colorScale(d) as string;
+      });
 
     const overlay = g.append("rect")
       .attr("width", width)
@@ -385,36 +403,40 @@ export class TimeViz extends LitElement {
       })
       .on("mousemove", (event) => {
         const [mouseX] = d3.pointer(event);
-        const date = xScale.invert(mouseX);
-
+        const xValue = xScale.invert(mouseX);
         cursorLine.attr("x1", mouseX).attr("x2", mouseX);
-
-        seriesData.forEach((data: TimeSeriesDataPoint[], seriesName: string) => {
-          const bisector = d3.bisector((d: TimeSeriesDataPoint) => d.date).left;
-          const index = bisector(data, date);
-          const closestPoint = data[index] || data[index - 1];
-
-          if (closestPoint) {
-            cursorPoints
-              .filter((d: string) => d === seriesName)
-              .attr("cx", xScale(closestPoint.date))
-              .attr("cy", yScale(closestPoint.value));
+        // Find closest data point by x
+        let closestIdx = 0;
+        let minDist = Infinity;
+        for (let i = 0; i < this._data.length; i++) {
+          const v = this._config.x.accessor(this._data[i]);
+          const dist = Math.abs((v instanceof Date ? v.getTime() : v) - (xValue instanceof Date ? xValue.getTime() : xValue));
+          if (dist < minDist) {
+            minDist = dist;
+            closestIdx = i;
           }
+        }
+        const closest = this._data[closestIdx];
+        this.filteredSeries.forEach(serie => {
+          cursorPoints
+            .filter((d: string) => d === serie.label)
+            .attr("cx", xScale(this._config.x.accessor(closest)))
+            .attr("cy", yScale(serie.accessor(closest)));
         });
       });
   }
 
+
   private _renderLegend(
     g: d3.Selection<SVGGElement, unknown, null, undefined>,
-    width: number,
-    seriesData: d3.InternMap<string, TimeSeriesDataPoint[]>
+    width: number
   ): void {
     const legend = g.append("g")
       .attr("class", "legend")
       .attr("transform", `translate(${width + 10}, 20)`);
 
     const legendItems = legend.selectAll(".legend-item")
-      .data(Array.from(seriesData.keys()))
+      .data(this._config.series.map(s => s.label))
       .enter()
       .append("g")
       .attr("class", "legend-item")
@@ -425,7 +447,10 @@ export class TimeViz extends LitElement {
       .attr("x2", 15)
       .attr("y1", 0)
       .attr("y2", 0)
-      .style("stroke", (d: string) => this.colorScale(d) as string)
+      .style("stroke", (d: string) => {
+        const serie = this._config.series.find(s => s.label === d);
+        return serie?.color || this.colorScale(d) as string;
+      })
       .style("stroke-width", 2);
 
     legendItems.append("text")
@@ -437,20 +462,21 @@ export class TimeViz extends LitElement {
     if (!this.isStatic) {
       legendItems
         .style("cursor", "pointer")
-        .on("click", (event, seriesName: string) => {
-          if (this._hiddenSeries.has(seriesName)) {
-            this._hiddenSeries.delete(seriesName);
+        .on("click", (event, label: string) => {
+          if (this._hiddenSeries.has(label)) {
+            this._hiddenSeries.delete(label);
           } else {
-            this._hiddenSeries.add(seriesName);
+            this._hiddenSeries.add(label);
           }
           this._hiddenSeries = new Set(this._hiddenSeries);
         });
     }
   }
 
+
   render() {
     const series = this.availableSeries;
-    const hasData = this._data.length > 0;
+    const hasData = this._data.length > 0 && this._config.series.length > 0;
 
     return html`
       <section>
