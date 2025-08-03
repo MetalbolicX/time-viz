@@ -170,8 +170,8 @@ export class TimeViz extends LitElement {
   @state()
   private declare _hiddenSeries: Set<string>;
 
-  private svgRef = createRef<SVGElement>();
-  private colorScale = scaleOrdinal(schemeCategory10);
+  #svgRef = createRef<SVGElement>();
+  #colorScale = scaleOrdinal(schemeCategory10);
 
   constructor() {
     super();
@@ -248,9 +248,9 @@ export class TimeViz extends LitElement {
   };
 
   #handleExport = (): void => {
-    if (!this.svgRef.value) return;
+    if (!this.#svgRef.value) return;
 
-    const svgElement = this.svgRef.value;
+    const svgElement = this.#svgRef.value;
     const serializer = new XMLSerializer();
     const svgString = serializer.serializeToString(svgElement);
 
@@ -269,7 +269,7 @@ export class TimeViz extends LitElement {
 
   #renderChart(): void {
     if (
-      !this.svgRef.value ||
+      !this.#svgRef.value ||
       !this._data.length ||
       !this._config.ySeries.length
     )
@@ -278,10 +278,10 @@ export class TimeViz extends LitElement {
       .config(this._config)
       .series(this.filteredSeries)
       .data(this._data)
-      .colorScale(this.colorScale);
+      .colorScale(this.#colorScale);
 
-    select(this.svgRef.value).call(chart);
-    // if (!this.svgRef.value || !this._data?.length || !this._config?.series?.length) return;
+    select(this.#svgRef.value).call(chart);
+    // if (!this.#svgRef.value || !this._data?.length || !this._config?.series?.length) return;
 
     // const svg = d3.select(this.svgRef.value);
     // svg.selectAll("*").remove();
@@ -488,7 +488,7 @@ export class TimeViz extends LitElement {
             ? html`<h2 class="chart-title">${this.chartTitle}</h2>`
             : nothing}
           <svg
-            ${ref(this.svgRef)}
+            ${ref(this.#svgRef)}
             viewBox="0 0 800 400"
             preserveAspectRatio="xMidYMid meet"
             role="img"
