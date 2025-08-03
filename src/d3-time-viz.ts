@@ -23,7 +23,8 @@ export const createTimeVizChart = () => {
       left: 40,
     };
 
-    const { width = 0, height = 0 } = selection.node()?.getBoundingClientRect() || {};
+    const { width = 0, height = 0 } =
+      selection.node()?.getBoundingClientRect() || {};
     if (!width || !height) return;
     const innerWidth = width - (margin.left + margin.right);
     const innerHeight = height - (margin.top + margin.bottom);
@@ -119,25 +120,39 @@ export const createTimeVizChart = () => {
       return line;
     });
 
-    const serieSelection = mainGroup
+    mainGroup
       .selectAll<SVGPathElement, TimeVizSeriesConfig>("path.serie")
-      .data(series, ({ label }) => label);
+      .data(series, ({ label }) => label)
+      .join(
+        (enter) =>
+          enter
+            .append("path")
+            .attr("class", "serie")
+            .attr("data-label", ({ label }) => label)
+            .attr("d", (_, i) => lineGenerators.at(i)?.(data) ?? "")
+            .style("stroke", ({ color, label }) => color || colorScale(label)),
+        (update) =>
+          update
+            .attr("d", (_, i) => lineGenerators.at(i)?.(data) ?? "")
+            .style("stroke", ({ color, label }) => color || colorScale(label)),
+        (exit) => exit.remove()
+      );
 
-    // EXIT
-    serieSelection.exit().remove();
+    // // EXIT
+    // serieSelection.exit().remove();
 
-    // UPDATE
-    serieSelection
-      .attr("d", (_, i) => lineGenerators[i](data))
-      .style("stroke", ({ color, label }) => color || colorScale(label));
+    // // UPDATE
+    // serieSelection
+    //   .attr("d", (_, i) => lineGenerators[i](data))
+    //   .style("stroke", ({ color, label }) => color || colorScale(label));
 
-    // ENTER
-    serieSelection
-      .enter()
-      .append("path")
-      .attr("class", "serie")
-      .attr("d", (_, i) => lineGenerators[i](data))
-      .style("stroke", ({ color, label }) => color || colorScale(label));
+    // // ENTER
+    // serieSelection
+    //   .enter()
+    //   .append("path")
+    //   .attr("class", "serie")
+    //   .attr("d", (_, i) => lineGenerators[i](data))
+    //   .style("stroke", ({ color, label }) => color || colorScale(label));
 
     // Cursor interaction (only if not static)
     if (!isStatic) {
