@@ -109,59 +109,22 @@ export const createTimeVizChart = () => {
       .attr("class", "y axis")
       .call(yAxis as any);
 
-    // Draw lines for each series
-    const dataset = series.map((serie) =>
-      data.map((d) => ({
-        x: config.xSerie.accessor(d),
-        y: serie.accessor(d),
-        label: serie.label,
-        color: serie.color || colorScale(serie.label),
-      }))
-    );
+    // Draw lines for each series (match #renderChart)
+    for (const serie of series) {
+      const line = d3
+        .line<ChartDataRow>()
+        .x((d) => xScale(config.xSerie.accessor(d)))
+        .y((d) => yScale(serie.accessor(d)));
 
-    const line = d3
-      .line<{ x: number; y: number }>()
-      .x((d) => xScale(d.x))
-      .y((d) => yScale(d.y));
+      isCurved && line.curve(d3.curveCatmullRom);
 
-    isCurved && line.curve(d3.curveCatmullRom);
-    const transitionTime =
-      isStatic && config.transitionTime ? 0 : config.transitionTime ?? 750;
-
-    mainGroup
-      .selectAll(".series")
-      .data([null])
-      .join("g")
-      .attr("class", "series")
-      .selectAll(".serie")
-      .data(dataset)
-      .join(
-        (enter) =>
-          enter
-            .append("path")
-            .attr("class", "serie")
-            .attr("data-label", ([{ label }]) => label)
-            .attr("d", (d) => line(d as { x: number; y: number }[]))
-            .style("stroke", ([{ color }]) => color)
-            .call((serie) => {
-              const node = serie.node();
-              if (!node) return;
-              const totalLength = node.getTotalLength();
-              serie
-                .attr("stroke-dasharray", totalLength)
-                .attr("stroke-dashoffset", totalLength)
-                .transition()
-                .duration(transitionTime)
-                .attr("stroke-dashoffset", 0);
-            }),
-        (update) =>
-          update
-            .transition()
-            .duration(transitionTime)
-            .attr("stroke", ([{ color }]) => color)
-            .attr("d", (d) => line(d as { x: number; y: number }[])),
-        (exit) => exit.remove()
-      );
+        mainGroup
+        .append("path")
+        .datum(data)
+        .attr("class", "serie")
+        .attr("d", line)
+        .style("stroke", serie.color || colorScale(serie.label));
+    }
 
     // Cursor interaction (only if not static)
     if (!isStatic) {

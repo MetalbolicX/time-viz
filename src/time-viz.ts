@@ -287,96 +287,98 @@ export class TimeViz extends LitElement {
       !this._config.ySeries.length
     )
       return;
-    // const chart = createTimeVizChart()
-    //   .config(this._config)
-    //   .series(this.filteredSeries)
-    //   .data(this._data)
-    //   .colorScale(this.#colorScale);
+    const chart = createTimeVizChart()
+      .config(this._config)
+      .series(this.filteredSeries)
+      .data(this._data)
+      .colorScale(this.#colorScale);
 
-    // select(this.#svgRef.value).call(chart);
-    if (
-      !this.#svgRef.value ||
-      !this._data?.length ||
-      !this._config?.ySeries?.length
-    )
-      return;
+    select(this.#svgRef.value).call(chart);
 
-    const svg = select(this.#svgRef.value);
-    svg.selectAll("*").remove();
+    // if (
+    //   !this.#svgRef.value ||
+    //   !this._data?.length ||
+    //   !this._config?.ySeries?.length
+    // )
+    //   return;
 
-    const containerRect = this.#svgRef.value.getBoundingClientRect();
-    const width = containerRect.width - this.margin.left - this.margin.right;
-    const height = containerRect.height - this.margin.top - this.margin.bottom;
-    if (width <= 0 || height <= 0) return;
+    // const svg = select(this.#svgRef.value);
 
-    const g = svg
-      .append("g")
-      .attr("transform", `translate(${this.margin.left},${this.margin.top})`);
+    // svg.selectAll("*").remove();
 
-    // X scale
-    const xVals = this._data.map(this._config.xSerie.accessor);
-    const xDomain = extent(xVals) as [Date | number, Date | number];
-    const isTime = xDomain[0] instanceof Date;
-    const xScale = isTime
-      ? scaleTime()
-          .domain(xDomain as [Date, Date])
-          .range([0, width])
-      : scaleLinear()
-          .domain(xDomain as [number, number])
-          .range([0, width]);
+    // const containerRect = this.#svgRef.value.getBoundingClientRect();
+    // const width = containerRect.width - this.margin.left - this.margin.right;
+    // const height = containerRect.height - this.margin.top - this.margin.bottom;
+    // if (width <= 0 || height <= 0) return;
 
-    // Y scale (all series)
-    const yVals = this._data.flatMap((row) =>
-      this.filteredSeries.map((s) => s.accessor(row))
-    );
-    const yDomain = extent(yVals) as [number, number];
-    const yScale = scaleLinear().domain(yDomain).nice().range([height, 0]);
+    // const g = svg
+    //   .append("g")
+    //   .attr("transform", `translate(${this.margin.left},${this.margin.top})`);
 
-    // Grid
-    const xGrid = axisBottom(xScale)
-      .tickSize(-height)
-      .tickFormat(() => "");
-    const yGrid = axisLeft(yScale)
-      .tickSize(-width)
-      .tickFormat(() => "");
-    g.append("g")
-      .attr("class", "grid")
-      .attr("transform", `translate(0,${height})`)
-      .call(xGrid);
-    g.append("g").attr("class", "grid").call(yGrid);
+    // // X scale
+    // const xVals = this._data.map(this._config.xSerie.accessor);
+    // const xDomain = extent(xVals) as [Date | number, Date | number];
+    // const isTime = xDomain[0] instanceof Date;
+    // const xScale = isTime
+    //   ? scaleTime()
+    //       .domain(xDomain as [Date, Date])
+    //       .range([0, width])
+    //   : scaleLinear()
+    //       .domain(xDomain as [number, number])
+    //       .range([0, width]);
 
-    // Axes
-    const xAxis = axisBottom(xScale)
-      .ticks(this.xTicks)
-      .tickFormat(
-        isTime
-          ? (timeFormat(this.formatXAxis) as any)
-          : (format(this.formatXAxis) as any)
-      );
-    const yAxis = axisLeft(yScale)
-      .ticks(this.yTicks)
-      .tickFormat(format(this.formatYAxis) as any);
-    g.append("g")
-      .attr("class", "axis")
-      .attr("transform", `translate(0,${height})`)
-      .call(xAxis);
-    g.append("g").attr("class", "axis").call(yAxis);
+    // // Y scale (all series)
+    // const yVals = this._data.flatMap((row) =>
+    //   this.filteredSeries.map((s) => s.accessor(row))
+    // );
+    // const yDomain = extent(yVals) as [number, number];
+    // const yScale = scaleLinear().domain(yDomain).nice().range([height, 0]);
 
-    // Draw lines for each series
-    for (const serie of this.filteredSeries) {
-      const linePath = line<ChartDataRow>()
-        .x((d) => xScale(this._config.xSerie.accessor(d)))
-        .y((d) => yScale(serie.accessor(d)));
-      if (this.isCurved) linePath.curve(curveMonotoneX);
-      g.append("path")
-        .datum(this._data)
-        .attr("class", "serie")
-        .attr("d", linePath)
-        .style(
-          "stroke",
-          serie.color || (this.#colorScale(serie.label) as string)
-        );
-    }
+    // // Grid
+    // const xGrid = axisBottom(xScale)
+    //   .tickSize(-height)
+    //   .tickFormat(() => "");
+    // const yGrid = axisLeft(yScale)
+    //   .tickSize(-width)
+    //   .tickFormat(() => "");
+    // g.append("g")
+    //   .attr("class", "grid")
+    //   .attr("transform", `translate(0,${height})`)
+    //   .call(xGrid);
+    // g.append("g").attr("class", "grid").call(yGrid);
+
+    // // Axes
+    // const xAxis = axisBottom(xScale)
+    //   .ticks(this.xTicks)
+    //   .tickFormat(
+    //     isTime
+    //       ? (timeFormat(this.formatXAxis) as any)
+    //       : (format(this.formatXAxis) as any)
+    //   );
+    // const yAxis = axisLeft(yScale)
+    //   .ticks(this.yTicks)
+    //   .tickFormat(format(this.formatYAxis) as any);
+    // g.append("g")
+    //   .attr("class", "axis")
+    //   .attr("transform", `translate(0,${height})`)
+    //   .call(xAxis);
+    // g.append("g").attr("class", "axis").call(yAxis);
+
+    // // Draw lines for each series
+    // for (const serie of this.filteredSeries) {
+    //   const linePath = line<ChartDataRow>()
+    //     .x((d) => xScale(this._config.xSerie.accessor(d)))
+    //     .y((d) => yScale(serie.accessor(d)));
+    //   if (this.isCurved) linePath.curve(curveMonotoneX);
+    //   g.append("path")
+    //     .datum(this._data)
+    //     .attr("class", "serie")
+    //     .attr("d", linePath)
+    //     .style(
+    //       "stroke",
+    //       serie.color || (this.#colorScale(serie.label) as string)
+    //     );
+    // }
 
     // // Cursor interaction (only if not static)
     // if (!this.isStatic) {
