@@ -114,9 +114,11 @@ export const createTimeVizChart = () => {
     );
 
     const line = d3
-      .line<{ x: number; y: number }>()
-      .x((d) => xScale(d.x))
-      .y((d) => yScale(d.y));
+    .line<{ x: number; y: number }>()
+    .x((d) => xScale(d.x))
+    .y((d) => yScale(d.y));
+
+    isCurved && line.curve(d3.curveCatmullRom);
 
     main
       .selectAll(".series")
