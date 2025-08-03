@@ -64,7 +64,10 @@ export const createTimeVizChart = () => {
       .data([null])
       .join("g")
       .attr("class", "x grid")
-      .attr("transform", `translate(0, ${height - (config.margin?.bottom ?? 0)})`)
+      .attr(
+        "transform",
+        `translate(0, ${height - (config.margin?.bottom ?? 0)})`
+      )
       .call(xGrid as any);
 
     selection
@@ -117,6 +120,8 @@ export const createTimeVizChart = () => {
       .y((d) => yScale(d.y));
 
     isCurved && line.curve(d3.curveCatmullRom);
+    const transitionTime =
+      isStatic && config.transitionTime ? 0 : config.transitionTime ?? 750;
 
     selection
       .selectAll(".series")
@@ -125,11 +130,33 @@ export const createTimeVizChart = () => {
       .attr("class", "series")
       .selectAll(".serie")
       .data(dataset)
-      .join("path")
-      .attr("class", "serie")
-      .attr("data-label", ([{ label }]) => label)
-      .attr("d", (d) => line(d as { x: number; y: number }[]))
-      .style("stroke", ([{ color }]) => color);
+      .join(
+        (enter) =>
+          enter
+            .append("path")
+            .attr("class", "serie")
+            .attr("data-label", ([{ label }]) => label)
+            .attr("d", (d) => line(d as { x: number; y: number }[]))
+            .style("stroke", ([{ color }]) => color)
+            .call((serie) => {
+              const node = serie.node();
+              if (!node) return;
+              const totalLength = node.getTotalLength();
+              serie
+                .attr("stroke-dasharray", totalLength)
+                .attr("stroke-dashoffset", totalLength)
+                .transition()
+                .duration(transitionTime)
+                .attr("stroke-dashoffset", 0);
+            }),
+        (update) =>
+          update
+            .transition()
+            .duration(transitionTime)
+            .attr("stroke", ([{ color }]) => color)
+            .attr("d", (d) => line(d as { x: number; y: number }[])),
+        (exit) => exit.remove()
+      );
 
     // Cursor interaction (only if not static)
     if (!isStatic) {
