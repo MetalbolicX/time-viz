@@ -1,4 +1,3 @@
-
 import { LitElement, html, css, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { createRef, ref } from "lit/directives/ref.js";
@@ -18,7 +17,8 @@ export class TimeViz extends LitElement {
       display: block;
       width: 100%;
       height: 100%;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+        sans-serif;
     }
 
     section {
@@ -109,7 +109,7 @@ export class TimeViz extends LitElement {
     .cursor-line {
       stroke: #666;
       stroke-width: 1;
-      stroke-dasharray: 3,3;
+      stroke-dasharray: 3, 3;
       opacity: 0;
       pointer-events: none;
     }
@@ -161,7 +161,6 @@ export class TimeViz extends LitElement {
   @property({ type: String, attribute: "chart-title" })
   declare chartTitle: string;
 
-
   @state()
   private declare _config: TimeVizConfig;
   @state()
@@ -212,22 +211,27 @@ export class TimeViz extends LitElement {
     this.requestUpdate();
   }
 
-
   get availableSeries(): string[] {
     if (!this._config?.series?.length) return [];
-    return this._config.series.map(s => s.label);
+    return this._config.series.map((s) => s.label);
   }
 
   get filteredSeries(): TimeVizSeriesConfig[] {
     if (!this._config?.series?.length) return [];
     if (this._selectedSeries === "All") {
-      return this._config.series.filter(s => !this._hiddenSeries.has(s.label));
+      return this._config.series.filter(
+        (s) => !this._hiddenSeries.has(s.label)
+      );
     }
-    return this._config.series.filter(s => s.label === this._selectedSeries && !this._hiddenSeries.has(s.label));
+    return this._config.series.filter(
+      (s) =>
+        s.label === this._selectedSeries && !this._hiddenSeries.has(s.label)
+    );
   }
 
-
-  protected updated(changedProperties: Map<string | number | symbol, unknown>): void {
+  protected updated(
+    changedProperties: Map<string | number | symbol, unknown>
+  ): void {
     if (
       changedProperties.has("_data") ||
       changedProperties.has("_selectedSeries") ||
@@ -263,10 +267,9 @@ export class TimeViz extends LitElement {
     URL.revokeObjectURL(url);
   };
 
-
   private _renderChart(): void {
-    if (!this.svgRef.value || !this._data.length || !this._config.series.length) return;
-    console.table(this.filteredSeries);
+    if (!this.svgRef.value || !this._data.length || !this._config.series.length)
+      return;
     const chart = createTimeVizChart()
       .config(this._config)
       .series(this.filteredSeries)
@@ -342,7 +345,6 @@ export class TimeViz extends LitElement {
     // this._renderLegend(g, width);
   }
 
-
   // private _addCursorInteraction(
   //   g: d3.Selection<SVGGElement, unknown, null, undefined>,
   //   xScale: d3.ScaleTime<number, number> | d3.ScaleLinear<number, number>,
@@ -406,7 +408,6 @@ export class TimeViz extends LitElement {
   //     });
   // }
 
-
   // private _renderLegend(
   //   g: d3.Selection<SVGGElement, unknown, null, undefined>,
   //   width: number
@@ -453,7 +454,6 @@ export class TimeViz extends LitElement {
   //   }
   // }
 
-
   render() {
     const series = this.availableSeries;
     const hasData = this._data.length > 0 && this._config.series.length > 0;
@@ -467,7 +467,7 @@ export class TimeViz extends LitElement {
             ?disabled=${!hasData}
           >
             <option value="All">All Series</option>
-            ${series.map(s => html`<option value=${s}>${s}</option>`)}
+            ${series.map((s) => html`<option value=${s}>${s}</option>`)}
           </select>
 
           <button
@@ -480,15 +480,16 @@ export class TimeViz extends LitElement {
         </div>
 
         <figure>
-          ${this.chartTitle ? html`<h2 class="chart-title">${this.chartTitle}</h2>` : nothing}
+          ${this.chartTitle
+            ? html`<h2 class="chart-title">${this.chartTitle}</h2>`
+            : nothing}
           <svg
             ${ref(this.svgRef)}
             viewBox="0 0 800 400"
             preserveAspectRatio="xMidYMid meet"
             role="img"
             aria-label=${this.chartTitle || "Time series chart"}
-          >
-          </svg>
+          ></svg>
         </figure>
       </section>
     `;

@@ -28,7 +28,7 @@ export const createTimeVizChart = () => {
     const height = containerRect.height - margin.top - margin.bottom;
     if (width <= 0 || height <= 0) return;
 
-    const g = selection
+    const main = selection
       .selectAll("g.main")
       .data([null])
       .join("g")
@@ -62,14 +62,16 @@ export const createTimeVizChart = () => {
       .tickSize(-width)
       .tickFormat(() => "");
 
-    g.selectAll("g.x.grid")
+    main
+      .selectAll("g.x.grid")
       .data([null])
       .join("g")
       .attr("class", "x grid")
       .attr("transform", `translate(0,${height})`)
       .call(xGrid as any);
 
-    g.selectAll("g.y.grid")
+    main
+      .selectAll("g.y.grid")
       .data([null])
       .join("g")
       .attr("class", "y grid")
@@ -86,39 +88,48 @@ export const createTimeVizChart = () => {
       .ticks(config.yTicks ?? 5)
       .tickFormat(d3.timeFormat(config.formatYAxis ?? ".2f") as any);
 
-    g.selectAll("g.x.axis")
+    main
+      .selectAll("g.x.axis")
       .data([null])
       .join("g")
       .attr("class", "x axis")
       .attr("transform", `translate(0,${height})`)
       .call(xAxis as any);
 
-    g.selectAll("g.y.axis")
+    main
+      .selectAll("g.y.axis")
       .data([null])
       .join("g")
       .attr("class", "y axis")
       .call(yAxis as any);
 
     // Draw lines for each series
-    for (const serie of series) {
-      const line = d3
-        .line<ChartDataRow>()
-        .x((d) => xScale(config.x.accessor(d)))
-        .y((d) => yScale(serie.accessor(d)));
-      if (isCurved) line.curve(d3.curveMonotoneX);
-      // g.append("path")
-      //   .datum(data)
-      //   .attr("class", "line")
-      //   .attr("d", line)
-      //   .style("stroke", serie.color || colorScale(serie.label));
-      g.selectAll(`path.serie[data-label="${serie.label}"]`)
-        .data([data])
-        .join("path")
-        .attr("class", "serie")
-        .attr("data-label", serie.label)
-        .attr("d", line)
-        .style("stroke", serie.color || colorScale(serie.label));
-    }
+    const dataset = series.map((serie) =>
+      data.map((d) => ({
+        x: config.x.accessor(d),
+        y: serie.accessor(d),
+        label: serie.label,
+        color: serie.color || colorScale(serie.label),
+      }))
+    );
+
+    const line = d3
+      .line<{ x: number; y: number }>()
+      .x((d) => xScale(d.x))
+      .y((d) => yScale(d.y));
+
+    main
+      .selectAll(".series")
+      .data([null])
+      .join("g")
+      .attr("class", "series")
+      .selectAll("path.serie")
+      .data(dataset)
+      .join("path")
+      .attr("class", "serie")
+      .attr("data-label", ([{ label }]) => label)
+      .attr("d", (d) => line(d as { x: number; y: number }[]))
+      .style("stroke", ([{ color }]) => color);
 
     // Cursor interaction (only if not static)
     if (!isStatic) {
