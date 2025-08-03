@@ -3,42 +3,13 @@ import { LitElement, html, css, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { createRef, ref } from "lit/directives/ref.js";
 import * as d3 from "d3";
-
-
-type ChartDataRow = Record<string, unknown>;
-
-interface TimeVizSeriesConfig<T = ChartDataRow> {
-  accessor: (row: T) => number;
-  label: string;
-  color?: string;
-  format?: string;
-}
-
-interface TimeVizConfig<T = ChartDataRow> {
-  data: T[];
-  x: {
-    accessor: (row: T) => Date | number;
-    label?: string;
-    format?: string;
-  };
-  series: Array<TimeVizSeriesConfig<T>>;
-  margin?: MarginConfig;
-  isStatic?: boolean;
-  isCurved?: boolean;
-  transitionTime?: number;
-  xTicks?: number;
-  yTicks?: number;
-  formatXAxis?: string;
-  formatYAxis?: string;
-  chartTitle?: string;
-}
-
-interface MarginConfig {
-  top: number;
-  right: number;
-  bottom: number;
-  left: number;
-}
+import type {
+  TimeVizConfig,
+  TimeVizSeriesConfig,
+  ChartDataRow,
+  MarginConfig,
+} from "./types";
+import { createTimeVizChart } from "./d3-time-viz";
 
 @customElement("time-viz")
 export class TimeViz extends LitElement {
@@ -118,7 +89,7 @@ export class TimeViz extends LitElement {
     }
 
     .axis {
-      font-size: 12px;
+      font-size: 0.7em;
     }
 
     .grid line {
@@ -130,7 +101,7 @@ export class TimeViz extends LitElement {
       stroke-width: 0;
     }
 
-    .line {
+    .serie {
       fill: none;
       stroke-width: 2;
     }
@@ -294,184 +265,193 @@ export class TimeViz extends LitElement {
 
 
   private _renderChart(): void {
-    if (!this.svgRef.value || !this._data?.length || !this._config?.series?.length) return;
+    if (!this.svgRef.value || !this._data.length || !this._config.series.length) return;
+    console.table(this.filteredSeries);
+    const chart = createTimeVizChart()
+      .config(this._config)
+      .series(this.filteredSeries)
+      .data(this._data)
+      .colorScale(this.colorScale);
 
-    const svg = d3.select(this.svgRef.value);
-    svg.selectAll("*").remove();
+    d3.select(this.svgRef.value).call(chart);
+    // if (!this.svgRef.value || !this._data?.length || !this._config?.series?.length) return;
 
-    const containerRect = this.svgRef.value.getBoundingClientRect();
-    const width = containerRect.width - this.margin.left - this.margin.right;
-    const height = containerRect.height - this.margin.top - this.margin.bottom;
-    if (width <= 0 || height <= 0) return;
+    // const svg = d3.select(this.svgRef.value);
+    // svg.selectAll("*").remove();
 
-    const g = svg.append("g")
-      .attr("transform", `translate(${this.margin.left},${this.margin.top})`);
+    // const containerRect = this.svgRef.value.getBoundingClientRect();
+    // const width = containerRect.width - this.margin.left - this.margin.right;
+    // const height = containerRect.height - this.margin.top - this.margin.bottom;
+    // if (width <= 0 || height <= 0) return;
 
-    // X scale
-    const xVals = this._data.map(this._config.x.accessor);
-    const xDomain = d3.extent(xVals) as [Date | number, Date | number];
-    const isTime = xDomain[0] instanceof Date;
-    const xScale = isTime
-      ? d3.scaleTime().domain(xDomain as [Date, Date]).range([0, width])
-      : d3.scaleLinear().domain(xDomain as [number, number]).range([0, width]);
+    // const g = svg.append("g")
+    //   .attr("transform", `translate(${this.margin.left},${this.margin.top})`);
 
-    // Y scale (all series)
-    const yVals = this._data.flatMap(row => this.filteredSeries.map(s => s.accessor(row)));
-    const yDomain = d3.extent(yVals) as [number, number];
-    const yScale = d3.scaleLinear().domain(yDomain).nice().range([height, 0]);
+    // // X scale
+    // const xVals = this._data.map(this._config.x.accessor);
+    // const xDomain = d3.extent(xVals) as [Date | number, Date | number];
+    // const isTime = xDomain[0] instanceof Date;
+    // const xScale = isTime
+    //   ? d3.scaleTime().domain(xDomain as [Date, Date]).range([0, width])
+    //   : d3.scaleLinear().domain(xDomain as [number, number]).range([0, width]);
 
-    // Grid
-    const xGrid = d3.axisBottom(xScale).tickSize(-height).tickFormat(() => "");
-    const yGrid = d3.axisLeft(yScale).tickSize(-width).tickFormat(() => "");
-    g.append("g").attr("class", "grid").attr("transform", `translate(0,${height})`).call(xGrid);
-    g.append("g").attr("class", "grid").call(yGrid);
+    // // Y scale (all series)
+    // const yVals = this._data.flatMap(row => this.filteredSeries.map(s => s.accessor(row)));
+    // const yDomain = d3.extent(yVals) as [number, number];
+    // const yScale = d3.scaleLinear().domain(yDomain).nice().range([height, 0]);
 
-    // Axes
-    const xAxis = d3.axisBottom(xScale)
-      .ticks(this.xTicks)
-      .tickFormat(
-        isTime
-          ? d3.timeFormat(this.formatXAxis) as any
-          : d3.format(this.formatXAxis) as any
-      );
-    const yAxis = d3.axisLeft(yScale)
-      .ticks(this.yTicks)
-      .tickFormat(d3.format(this.formatYAxis) as any);
-    g.append("g").attr("class", "axis").attr("transform", `translate(0,${height})`).call(xAxis);
-    g.append("g").attr("class", "axis").call(yAxis);
+    // // Grid
+    // const xGrid = d3.axisBottom(xScale).tickSize(-height).tickFormat(() => "");
+    // const yGrid = d3.axisLeft(yScale).tickSize(-width).tickFormat(() => "");
+    // g.append("g").attr("class", "grid").attr("transform", `translate(0,${height})`).call(xGrid);
+    // g.append("g").attr("class", "grid").call(yGrid);
 
-    // Draw lines for each series
-    for (const serie of this.filteredSeries) {
-      const line = d3.line<ChartDataRow>()
-        .x(d => xScale(this._config.x.accessor(d)))
-        .y(d => yScale(serie.accessor(d)));
-      if (this.isCurved) line.curve(d3.curveMonotoneX);
-      g.append("path")
-        .datum(this._data)
-        .attr("class", "line")
-        .attr("d", line)
-        .style("stroke", serie.color || this.colorScale(serie.label) as string);
-    }
+    // // Axes
+    // const xAxis = d3.axisBottom(xScale)
+    //   .ticks(this.xTicks)
+    //   .tickFormat(
+    //     isTime
+    //       ? d3.timeFormat(this.formatXAxis) as any
+    //       : d3.format(this.formatXAxis) as any
+    //   );
+    // const yAxis = d3.axisLeft(yScale)
+    //   .ticks(this.yTicks)
+    //   .tickFormat(d3.format(this.formatYAxis) as any);
+    // g.append("g").attr("class", "axis").attr("transform", `translate(0,${height})`).call(xAxis);
+    // g.append("g").attr("class", "axis").call(yAxis);
 
-    // Cursor interaction (only if not static)
-    if (!this.isStatic) {
-      this._addCursorInteraction(g, xScale, yScale, width, height);
-    }
+    // // Draw lines for each series
+    // for (const serie of this.filteredSeries) {
+    //   const line = d3.line<ChartDataRow>()
+    //     .x(d => xScale(this._config.x.accessor(d)))
+    //     .y(d => yScale(serie.accessor(d)));
+    //   if (this.isCurved) line.curve(d3.curveMonotoneX);
+    //   g.append("path")
+    //     .datum(this._data)
+    //     .attr("class", "line")
+    //     .attr("d", line)
+    //     .style("stroke", serie.color || this.colorScale(serie.label) as string);
+    // }
 
-    // Legend
-    this._renderLegend(g, width);
+    // // Cursor interaction (only if not static)
+    // if (!this.isStatic) {
+    //   this._addCursorInteraction(g, xScale, yScale, width, height);
+    // }
+
+    // // Legend
+    // this._renderLegend(g, width);
   }
 
 
-  private _addCursorInteraction(
-    g: d3.Selection<SVGGElement, unknown, null, undefined>,
-    xScale: d3.ScaleTime<number, number> | d3.ScaleLinear<number, number>,
-    yScale: d3.ScaleLinear<number, number>,
-    width: number,
-    height: number
-  ): void {
-    const cursorLine = g.append("line")
-      .attr("class", "cursor-line")
-      .attr("y1", 0)
-      .attr("y2", height);
+  // private _addCursorInteraction(
+  //   g: d3.Selection<SVGGElement, unknown, null, undefined>,
+  //   xScale: d3.ScaleTime<number, number> | d3.ScaleLinear<number, number>,
+  //   yScale: d3.ScaleLinear<number, number>,
+  //   width: number,
+  //   height: number
+  // ): void {
+  //   const cursorLine = g.append("line")
+  //     .attr("class", "cursor-line")
+  //     .attr("y1", 0)
+  //     .attr("y2", height);
 
-    const cursorPoints = g.selectAll(".cursor-point")
-      .data(this.filteredSeries.map(s => s.label))
-      .enter()
-      .append("circle")
-      .attr("class", "cursor-point")
-      .attr("r", 4)
-      .style("stroke", (d: string) => {
-        const serie = this.filteredSeries.find(s => s.label === d);
-        return serie?.color || this.colorScale(d) as string;
-      });
+  //   const cursorPoints = g.selectAll(".cursor-point")
+  //     .data(this.filteredSeries.map(s => s.label))
+  //     .enter()
+  //     .append("circle")
+  //     .attr("class", "cursor-point")
+  //     .attr("r", 4)
+  //     .style("stroke", (d: string) => {
+  //       const serie = this.filteredSeries.find(s => s.label === d);
+  //       return serie?.color || this.colorScale(d) as string;
+  //     });
 
-    const overlay = g.append("rect")
-      .attr("width", width)
-      .attr("height", height)
-      .style("fill", "none")
-      .style("pointer-events", "all");
+  //   const overlay = g.append("rect")
+  //     .attr("width", width)
+  //     .attr("height", height)
+  //     .style("fill", "none")
+  //     .style("pointer-events", "all");
 
-    overlay
-      .on("mouseover", () => {
-        cursorLine.style("opacity", 1);
-        cursorPoints.style("opacity", 1);
-      })
-      .on("mouseout", () => {
-        cursorLine.style("opacity", 0);
-        cursorPoints.style("opacity", 0);
-      })
-      .on("mousemove", (event) => {
-        const [mouseX] = d3.pointer(event);
-        const xValue = xScale.invert(mouseX);
-        cursorLine.attr("x1", mouseX).attr("x2", mouseX);
-        // Find closest data point by x
-        let closestIdx = 0;
-        let minDist = Infinity;
-        for (let i = 0; i < this._data.length; i++) {
-          const v = this._config.x.accessor(this._data[i]);
-          const dist = Math.abs((v instanceof Date ? v.getTime() : v) - (xValue instanceof Date ? xValue.getTime() : xValue));
-          if (dist < minDist) {
-            minDist = dist;
-            closestIdx = i;
-          }
-        }
-        const closest = this._data[closestIdx];
-        this.filteredSeries.forEach(serie => {
-          cursorPoints
-            .filter((d: string) => d === serie.label)
-            .attr("cx", xScale(this._config.x.accessor(closest)))
-            .attr("cy", yScale(serie.accessor(closest)));
-        });
-      });
-  }
+  //   overlay
+  //     .on("mouseover", () => {
+  //       cursorLine.style("opacity", 1);
+  //       cursorPoints.style("opacity", 1);
+  //     })
+  //     .on("mouseout", () => {
+  //       cursorLine.style("opacity", 0);
+  //       cursorPoints.style("opacity", 0);
+  //     })
+  //     .on("mousemove", (event) => {
+  //       const [mouseX] = d3.pointer(event);
+  //       const xValue = xScale.invert(mouseX);
+  //       cursorLine.attr("x1", mouseX).attr("x2", mouseX);
+  //       // Find closest data point by x
+  //       let closestIdx = 0;
+  //       let minDist = Infinity;
+  //       for (let i = 0; i < this._data.length; i++) {
+  //         const v = this._config.x.accessor(this._data[i]);
+  //         const dist = Math.abs((v instanceof Date ? v.getTime() : v) - (xValue instanceof Date ? xValue.getTime() : xValue));
+  //         if (dist < minDist) {
+  //           minDist = dist;
+  //           closestIdx = i;
+  //         }
+  //       }
+  //       const closest = this._data[closestIdx];
+  //       this.filteredSeries.forEach(serie => {
+  //         cursorPoints
+  //           .filter((d: string) => d === serie.label)
+  //           .attr("cx", xScale(this._config.x.accessor(closest)))
+  //           .attr("cy", yScale(serie.accessor(closest)));
+  //       });
+  //     });
+  // }
 
 
-  private _renderLegend(
-    g: d3.Selection<SVGGElement, unknown, null, undefined>,
-    width: number
-  ): void {
-    const legend = g.append("g")
-      .attr("class", "legend")
-      .attr("transform", `translate(${width + 10}, 20)`);
+  // private _renderLegend(
+  //   g: d3.Selection<SVGGElement, unknown, null, undefined>,
+  //   width: number
+  // ): void {
+  //   const legend = g.append("g")
+  //     .attr("class", "legend")
+  //     .attr("transform", `translate(${width + 10}, 20)`);
 
-    const legendItems = legend.selectAll(".legend-item")
-      .data(this._config.series.map(s => s.label))
-      .enter()
-      .append("g")
-      .attr("class", "legend-item")
-      .attr("transform", (_d: string, i: number) => `translate(0, ${i * 20})`);
+  //   const legendItems = legend.selectAll(".legend-item")
+  //     .data(this._config.series.map(s => s.label))
+  //     .enter()
+  //     .append("g")
+  //     .attr("class", "legend-item")
+  //     .attr("transform", (_d: string, i: number) => `translate(0, ${i * 20})`);
 
-    legendItems.append("line")
-      .attr("x1", 0)
-      .attr("x2", 15)
-      .attr("y1", 0)
-      .attr("y2", 0)
-      .style("stroke", (d: string) => {
-        const serie = this._config.series.find(s => s.label === d);
-        return serie?.color || this.colorScale(d) as string;
-      })
-      .style("stroke-width", 2);
+  //   legendItems.append("line")
+  //     .attr("x1", 0)
+  //     .attr("x2", 15)
+  //     .attr("y1", 0)
+  //     .attr("y2", 0)
+  //     .style("stroke", (d: string) => {
+  //       const serie = this._config.series.find(s => s.label === d);
+  //       return serie?.color || this.colorScale(d) as string;
+  //     })
+  //     .style("stroke-width", 2);
 
-    legendItems.append("text")
-      .attr("x", 20)
-      .attr("y", 0)
-      .attr("dy", "0.35em")
-      .text((d: string) => d);
+  //   legendItems.append("text")
+  //     .attr("x", 20)
+  //     .attr("y", 0)
+  //     .attr("dy", "0.35em")
+  //     .text((d: string) => d);
 
-    if (!this.isStatic) {
-      legendItems
-        .style("cursor", "pointer")
-        .on("click", (event, label: string) => {
-          if (this._hiddenSeries.has(label)) {
-            this._hiddenSeries.delete(label);
-          } else {
-            this._hiddenSeries.add(label);
-          }
-          this._hiddenSeries = new Set(this._hiddenSeries);
-        });
-    }
-  }
+  //   if (!this.isStatic) {
+  //     legendItems
+  //       .style("cursor", "pointer")
+  //       .on("click", (event, label: string) => {
+  //         if (this._hiddenSeries.has(label)) {
+  //           this._hiddenSeries.delete(label);
+  //         } else {
+  //           this._hiddenSeries.add(label);
+  //         }
+  //         this._hiddenSeries = new Set(this._hiddenSeries);
+  //       });
+  //   }
+  // }
 
 
   render() {
