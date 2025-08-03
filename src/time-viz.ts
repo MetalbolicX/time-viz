@@ -1,7 +1,7 @@
 import { LitElement, html, css, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { createRef, ref } from "lit/directives/ref.js";
-import * as d3 from "d3";
+import { select, scaleOrdinal, schemeCategory10 } from "d3";
 import type {
   TimeVizConfig,
   TimeVizSeriesConfig,
@@ -171,7 +171,7 @@ export class TimeViz extends LitElement {
   private declare _hiddenSeries: Set<string>;
 
   private svgRef = createRef<SVGElement>();
-  private colorScale = d3.scaleOrdinal(d3.schemeCategory10);
+  private colorScale = scaleOrdinal(schemeCategory10);
 
   constructor() {
     super();
@@ -276,7 +276,7 @@ export class TimeViz extends LitElement {
       .data(this._data)
       .colorScale(this.colorScale);
 
-    d3.select(this.svgRef.value).call(chart);
+    select(this.svgRef.value).call(chart);
     // if (!this.svgRef.value || !this._data?.length || !this._config?.series?.length) return;
 
     // const svg = d3.select(this.svgRef.value);

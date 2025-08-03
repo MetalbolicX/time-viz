@@ -44,6 +44,8 @@ export const createTimeVizChart = () => {
     const yVals = data.flatMap((row: ChartDataRow) =>
       series.map((s: TimeVizSeriesConfig) => s.accessor(row))
     );
+    console.log("Y values for series:", yVals);
+
     const [yMin, yMax] = d3.extent(yVals);
     if (typeof yMin !== "number" || typeof yMax !== "number") return;
     const yScale = d3
@@ -112,6 +114,7 @@ export const createTimeVizChart = () => {
         color: serie.color || colorScale(serie.label),
       }))
     );
+    console.log("Dataset for series:", dataset);
 
     const line = d3
     .line<{ x: number; y: number }>()
