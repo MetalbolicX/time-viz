@@ -196,7 +196,7 @@ export class TimeViz extends LitElement {
 
   public set config(cfg: TimeVizConfig) {
     this._config = cfg;
-    this._data = cfg.data;
+    this._data = [...cfg.data];
     this.margin = cfg.margin ?? this.margin;
     this.isStatic = cfg.isStatic ?? this.isStatic;
     this.isCurved = cfg.isCurved ?? this.isCurved;
