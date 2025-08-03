@@ -9,6 +9,8 @@ export const createTimeVizChart = () => {
   let colorScale: d3.ScaleOrdinal<string, string>;
   let isCurved: boolean;
   let isStatic: boolean;
+  let innerWidth: number = 0;
+  let innerHeight: number = 0;
 
   const chart = (
     selection: Selection<SVGElement, unknown, null, undefined>
@@ -22,11 +24,12 @@ export const createTimeVizChart = () => {
       bottom: 60,
       left: 60,
     };
-    const containerRect = selection.node()?.getBoundingClientRect();
-    if (!containerRect) return;
-    const width = containerRect.width - margin.left - margin.right;
-    const height = containerRect.height - margin.top - margin.bottom;
-    if (width <= 0 || height <= 0) return;
+
+    const { width, height } = selection.node()?.getBoundingClientRect() || {};
+    if (!(width && height)) return;
+    innerWidth = width - margin.left - margin.right;
+    innerHeight = height - margin.top - margin.bottom;
+    if (innerWidth <= 0 || innerHeight <= 0) return;
 
     const main = selection
       .selectAll("g.main")
@@ -45,7 +48,6 @@ export const createTimeVizChart = () => {
     const yVals = data.flatMap((row: ChartDataRow) =>
       series.map((s: TimeVizSeriesConfig) => s.accessor(row))
     );
-    console.log("Y values for series:", yVals);
 
     const [yMin, yMax] = d3.extent(yVals);
     if (typeof yMin !== "number" || typeof yMax !== "number") return;
@@ -115,7 +117,6 @@ export const createTimeVizChart = () => {
         color: serie.color || colorScale(serie.label),
       }))
     );
-    console.log("Dataset for series:", dataset);
 
     const line = d3
       .line<{ x: number; y: number }>()
