@@ -370,9 +370,8 @@ export class TimeViz extends LitElement {
       if (this.isCurved) linePath.curve(curveMonotoneX);
       g.append("path")
         .datum(this._data)
-        .attr("class", "line")
+        .attr("class", "serie")
         .attr("d", linePath)
-        .attr("fill", "none")
         .style(
           "stroke",
           serie.color || (this.#colorScale(serie.label) as string)
@@ -530,7 +529,6 @@ export class TimeViz extends LitElement {
             : nothing}
           <svg
             ${ref(this.#svgRef)}
-            viewBox="0 0 800 400"
             preserveAspectRatio="xMidYMid meet"
             role="img"
             aria-label=${this.chartTitle || "Time series chart"}
