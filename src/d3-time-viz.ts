@@ -109,22 +109,35 @@ export const createTimeVizChart = () => {
       .attr("class", "y axis")
       .call(yAxis as any);
 
-    // Draw lines for each series (match #renderChart)
-    for (const serie of series) {
+    // Draw lines for each series (idempotent enter-update-exit pattern)
+    const lineGenerators = series.map(({ accessor }) => {
       const line = d3
         .line<ChartDataRow>()
         .x((d) => xScale(config.xSerie.accessor(d)))
-        .y((d) => yScale(serie.accessor(d)));
-
+        .y((d) => yScale(accessor(d)));
       isCurved && line.curve(d3.curveCatmullRom);
+      return line;
+    });
 
-        mainGroup
-        .append("path")
-        .datum(data)
-        .attr("class", "serie")
-        .attr("d", line)
-        .style("stroke", serie.color || colorScale(serie.label));
-    }
+    const serieSelection = mainGroup
+      .selectAll<SVGPathElement, TimeVizSeriesConfig>("path.serie")
+      .data(series, ({ label }) => label);
+
+    // EXIT
+    serieSelection.exit().remove();
+
+    // UPDATE
+    serieSelection
+      .attr("d", (_, i) => lineGenerators[i](data))
+      .style("stroke", ({ color, label }) => color || colorScale(label));
+
+    // ENTER
+    serieSelection
+      .enter()
+      .append("path")
+      .attr("class", "serie")
+      .attr("d", (_, i) => lineGenerators[i](data))
+      .style("stroke", ({ color, label }) => color || colorScale(label));
 
     // Cursor interaction (only if not static)
     if (!isStatic) {
