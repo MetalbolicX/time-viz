@@ -12,7 +12,7 @@ import { createTimeVizChart } from "./d3-time-viz";
 
 @customElement("time-viz")
 export class TimeViz extends LitElement {
-  static styles = css`
+  public static styles = css`
     :host {
       display: block;
       width: 100%;
@@ -194,7 +194,7 @@ export class TimeViz extends LitElement {
     };
   }
 
-  set config(cfg: TimeVizConfig) {
+  public set config(cfg: TimeVizConfig) {
     this._config = cfg;
     this._data = cfg.data;
     this.margin = cfg.margin ?? this.margin;
@@ -211,21 +211,21 @@ export class TimeViz extends LitElement {
     this.requestUpdate();
   }
 
-  get availableSeries(): string[] {
+  public get ySeriesLabels(): string[] {
     if (!this._config?.ySeries?.length) return [];
-    return this._config.ySeries.map((s) => s.label);
+    return this._config.ySeries.map(({ label }) => label);
   }
 
-  get filteredSeries(): TimeVizSeriesConfig[] {
+  public get filteredSeries(): TimeVizSeriesConfig[] {
     if (!this._config?.ySeries?.length) return [];
     if (this._selectedSeries === "All") {
       return this._config.ySeries.filter(
-        (s) => !this._hiddenSeries.has(s.label)
+        ({ label }) => !this._hiddenSeries.has(label)
       );
     }
     return this._config.ySeries.filter(
-      (s) =>
-        s.label === this._selectedSeries && !this._hiddenSeries.has(s.label)
+      ({ label }) =>
+        label === this._selectedSeries && !this._hiddenSeries.has(label)
     );
   }
 
@@ -238,16 +238,16 @@ export class TimeViz extends LitElement {
       changedProperties.has("_hiddenSeries") ||
       changedProperties.has("_config")
     ) {
-      this._renderChart();
+      this.#renderChart();
     }
   }
 
-  private _handleSeriesChange = (event: Event): void => {
+  #handleSeriesChange = (event: Event): void => {
     const target = event.target as HTMLSelectElement;
     this._selectedSeries = target.value;
   };
 
-  private _handleExport = (): void => {
+  #handleExport = (): void => {
     if (!this.svgRef.value) return;
 
     const svgElement = this.svgRef.value;
@@ -267,8 +267,12 @@ export class TimeViz extends LitElement {
     URL.revokeObjectURL(url);
   };
 
-  private _renderChart(): void {
-    if (!this.svgRef.value || !this._data.length || !this._config.ySeries.length)
+  #renderChart(): void {
+    if (
+      !this.svgRef.value ||
+      !this._data.length ||
+      !this._config.ySeries.length
+    )
       return;
     const chart = createTimeVizChart()
       .config(this._config)
@@ -455,23 +459,23 @@ export class TimeViz extends LitElement {
   // }
 
   render() {
-    const series = this.availableSeries;
+    const seriesLabels = this.ySeriesLabels;
     const hasData = this._data.length > 0 && this._config.ySeries.length > 0;
 
     return html`
       <section>
         <div class="controls">
           <select
-            @change=${this._handleSeriesChange}
+            @change=${this.#handleSeriesChange}
             .value=${this._selectedSeries}
             ?disabled=${!hasData}
           >
             <option value="All">All Series</option>
-            ${series.map((s) => html`<option value=${s}>${s}</option>`)}
+            ${seriesLabels.map((label) => html`<option value=${label}>${label}</option>`)}
           </select>
 
           <button
-            @click=${this._handleExport}
+            @click=${this.#handleExport}
             ?disabled=${!hasData}
             type="button"
           >
