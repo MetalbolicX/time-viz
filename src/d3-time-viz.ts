@@ -9,8 +9,6 @@ export const createTimeVizChart = () => {
   let colorScale: d3.ScaleOrdinal<string, string>;
   let isCurved: boolean;
   let isStatic: boolean;
-  let innerWidth: number = 0;
-  let innerHeight: number = 0;
 
   const chart = (
     selection: Selection<SVGElement, unknown, null, undefined>
@@ -27,22 +25,16 @@ export const createTimeVizChart = () => {
 
     const { width, height } = selection.node()?.getBoundingClientRect() || {};
     if (!(width && height)) return;
-    innerWidth = width - margin.left - margin.right;
-    innerHeight = height - margin.top - margin.bottom;
-    if (innerWidth <= 0 || innerHeight <= 0) return;
-
-    const main = selection
-      .selectAll("g.main")
-      .data([null])
-      .join("g")
-      .attr("class", "main")
-      .attr("transform", `translate(${margin.left},${margin.top})`);
 
     // X scale (time only)
     const xVals = data.map(config.xSerie.accessor);
     const [xMin, xMax] = d3.extent(xVals);
     if (!(xMin instanceof Date && xMax instanceof Date)) return;
-    const xScale = d3.scaleTime().domain([xMin, xMax]).range([0, width]).nice();
+    const xScale = d3
+      .scaleTime()
+      .domain([xMin, xMax])
+      .range([config.margin?.left ?? 0, width - (config.margin?.right ?? 0)])
+      .nice();
 
     // Y scale (all series)
     const yVals = data.flatMap((row: ChartDataRow) =>
@@ -54,7 +46,7 @@ export const createTimeVizChart = () => {
     const yScale = d3
       .scaleLinear()
       .domain([yMin, yMax])
-      .range([height, 0])
+      .range([height - (config.margin?.bottom ?? 0), config.margin?.top ?? 0])
       .nice();
 
     // Grid
@@ -67,19 +59,20 @@ export const createTimeVizChart = () => {
       .tickSize(-width)
       .tickFormat(() => "");
 
-    main
+    selection
       .selectAll(".x.grid")
       .data([null])
       .join("g")
       .attr("class", "x grid")
-      .attr("transform", `translate(0,${height})`)
+      .attr("transform", `translate(0, ${height - (config.margin?.bottom ?? 0)})`)
       .call(xGrid as any);
 
-    main
+    selection
       .selectAll(".y.grid")
       .data([null])
       .join("g")
       .attr("class", "y grid")
+      .attr("transform", `translate(${config.margin?.left ?? 0}, 0)`)
       .call(yGrid as any);
 
     // Axes
@@ -91,9 +84,9 @@ export const createTimeVizChart = () => {
     const yAxis = d3
       .axisLeft(yScale)
       .ticks(config.yTicks ?? 5)
-      .tickFormat(d3.timeFormat(config.formatYAxis ?? ".2f") as any);
+      .tickFormat(d3.format(config.formatYAxis ?? ".2f") as any);
 
-    main
+    selection
       .selectAll("g.x.axis")
       .data([null])
       .join("g")
@@ -101,7 +94,7 @@ export const createTimeVizChart = () => {
       .attr("transform", `translate(0,${height})`)
       .call(xAxis as any);
 
-    main
+    selection
       .selectAll("g.y.axis")
       .data([null])
       .join("g")
@@ -125,7 +118,7 @@ export const createTimeVizChart = () => {
 
     isCurved && line.curve(d3.curveCatmullRom);
 
-    main
+    selection
       .selectAll(".series")
       .data([null])
       .join("g")
