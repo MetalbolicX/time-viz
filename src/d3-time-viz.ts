@@ -1,6 +1,6 @@
 import * as d3 from "d3";
 import type { Selection, ScaleOrdinal } from "d3";
-import type { TimeVizConfig, TimeVizSeriesConfig, ChartDataRow } from "./types";
+import type { TimeVizConfig, TimeVizSeriesConfig, ChartDataRow, MarginConfig } from "./types";
 
 export const createTimeVizChart = () => {
   let config: TimeVizConfig;
@@ -9,19 +9,23 @@ export const createTimeVizChart = () => {
   let colorScale: d3.ScaleOrdinal<string, string>;
   let isCurved: boolean;
   let isStatic: boolean;
+  let transitionTime: number = 0;
+  let xTicks: number = 5;
+  let yTicks: number = 5;
+  let margin: MarginConfig = {
+    top: 30,
+    right: 40,
+    bottom: 30,
+    left: 40,
+  };
+  let formatXAxis: string = "%Y-%m-%d";
+  let formatYAxis: string = ".2f";
 
   const chart = (
     selection: Selection<SVGElement, unknown, null, undefined>
   ) => {
     // selection.selectAll("*").remove();
     if (!config || !series?.length || !data?.length) return;
-
-    const margin = config.margin ?? {
-      top: 30,
-      right: 40,
-      bottom: 30,
-      left: 40,
-    };
 
     const { width = 0, height = 0 } =
       selection.node()?.getBoundingClientRect() || {};
@@ -87,20 +91,20 @@ export const createTimeVizChart = () => {
     // Axes
     const xAxis = d3
       .axisBottom(xScale)
-      .ticks(config.xTicks ?? 5)
-      .tickFormat(d3.timeFormat(config.formatXAxis ?? "%Y-%m-%d") as any);
+      .ticks(xTicks)
+      .tickFormat(d3.timeFormat(formatXAxis ?? "%Y-%m-%d") as any);
 
     const yAxis = d3
       .axisLeft(yScale)
-      .ticks(config.yTicks ?? 5)
-      .tickFormat(d3.format(config.formatYAxis ?? ".2f") as any);
+      .ticks(yTicks)
+      .tickFormat(d3.format(formatYAxis ?? ".2f"));
 
     mainGroup
       .selectAll("g.x.axis")
       .data([null])
       .join("g")
       .attr("class", "x axis")
-      .attr("transform", `translate(0,${innerHeight})`)
+      .attr("transform", `translate(0, ${innerHeight})`)
       .call(xAxis as any);
 
     mainGroup
@@ -130,11 +134,24 @@ export const createTimeVizChart = () => {
             .attr("class", "serie")
             .attr("data-label", ({ label }) => label)
             .attr("d", (_, i) => lineGenerators.at(i)?.(data) ?? "")
-            .style("stroke", ({ color, label }) => color || colorScale(label)),
+            .style("stroke", ({ color, label }) => color || colorScale(label))
+            .call((serie) => {
+              const node = serie.node();
+              if (!node) return;
+              const totalLength = node.getTotalLength();
+              serie
+                .attr("stroke-dasharray", totalLength)
+                .attr("stroke-dashoffset", totalLength)
+                .transition()
+                .duration(transitionTime)
+                .attr("stroke-dashoffset", 0);
+            }),
         (update) =>
           update
-            .attr("d", (_, i) => lineGenerators.at(i)?.(data) ?? "")
-            .style("stroke", ({ color, label }) => color || colorScale(label)),
+            .transition()
+            .duration(transitionTime)
+            .style("stroke", ({ color, label }) => color || colorScale(label))
+            .attr("d", (_, i) => lineGenerators.at(i)?.(data) ?? ""),
         (exit) => exit.remove()
       );
 
@@ -161,14 +178,20 @@ export const createTimeVizChart = () => {
     // Legend and other features can be added similarly
   };
 
-  chart.config = (v: TimeVizConfig) => ((config = v), chart);
-  chart.series = (v: TimeVizSeriesConfig[]) => ((series = v), chart);
-  chart.data = (v: ChartDataRow[]) => ((data = v), chart);
-  chart.colorScale = (v: ScaleOrdinal<string, string>) => (
-    (colorScale = v), chart
+  chart.config = (configuration: TimeVizConfig) => ((config = configuration), chart);
+  chart.series = (fields: TimeVizSeriesConfig[]) => ((series = fields), chart);
+  chart.data = (dataset: ChartDataRow[]) => ((data = dataset), chart);
+  chart.colorScale = (color: ScaleOrdinal<string, string>) => (
+    (colorScale = color), chart
   );
-  chart.isCurved = (v: boolean) => ((isCurved = v), chart);
-  chart.isStatic = (v: boolean) => ((isStatic = v), chart);
+  chart.isCurved = (bool: boolean) => ((isCurved = bool), chart);
+  chart.isStatic = (bool: boolean) => ((isStatic = bool), chart);
+  chart.transitionTime = (time: number) => ((transitionTime = time), chart);
+  chart.xTicks = (quantity: number) => ((xTicks = quantity), chart);
+  chart.yTicks = (quantity: number) => ((yTicks = quantity), chart);
+  chart.margin = (marg: MarginConfig) => ((margin = { ...margin, ...marg }), chart);
+  chart.formatXAxis = (format: string) => ((formatXAxis = format), chart);
+  chart.formatYAxis = (format: string) => ((formatYAxis = format), chart);
 
   return chart;
 };

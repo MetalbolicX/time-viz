@@ -1,4 +1,4 @@
-import "./src/index"
+import "./src/index";
 import { tsv } from "d3";
 
 const parseRow = (d: any) => ({
@@ -13,8 +13,7 @@ const data = await tsv(
   parseRow
 );
 
-const chart = document.querySelector('#chart');
-console.log("Chart element:", chart);
+const chart = document.querySelector("#chart");
 if (!chart) {
   throw new Error("Chart element not found");
 }
@@ -38,5 +37,5 @@ chart.config = {
       accessor: (d: any) => d.asia,
       label: "Asia",
     },
-  ]
-}
+  ],
+};

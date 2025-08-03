@@ -1,20 +1,7 @@
-import { LitElement, html, css, nothing } from "lit";
+import { LitElement, html, css } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { createRef, ref } from "lit/directives/ref.js";
-import {
-  select,
-  scaleOrdinal,
-  schemeCategory10,
-  extent,
-  scaleLinear,
-  axisLeft,
-  axisBottom,
-  format,
-  curveMonotoneX,
-  line,
-  scaleTime,
-  timeFormat,
-} from "d3";
+import { select, scaleOrdinal, schemeCategory10 } from "d3";
 import type {
   TimeVizConfig,
   TimeVizSeriesConfig,
@@ -171,9 +158,6 @@ export class TimeViz extends LitElement {
   @property({ type: String, attribute: "format-y-axis" })
   declare formatYAxis: string;
 
-  @property({ type: String, attribute: "chart-title" })
-  declare chartTitle: string;
-
   @state()
   private declare _config: TimeVizConfig;
   @state()
@@ -196,7 +180,6 @@ export class TimeViz extends LitElement {
     this.yTicks = 5;
     this.formatXAxis = "%Y-%m-%d";
     this.formatYAxis = ".2f";
-    this.chartTitle = "";
     this._data = [];
     this._selectedSeries = "All";
     this._hiddenSeries = new Set<string>();
@@ -210,15 +193,6 @@ export class TimeViz extends LitElement {
   public set config(cfg: TimeVizConfig) {
     this._config = cfg;
     this._data = [...cfg.data];
-    this.margin = cfg.margin ?? this.margin;
-    this.isStatic = cfg.isStatic ?? this.isStatic;
-    this.isCurved = cfg.isCurved ?? this.isCurved;
-    this.transitionTime = cfg.transitionTime ?? this.transitionTime;
-    this.xTicks = cfg.xTicks ?? this.xTicks;
-    this.yTicks = cfg.yTicks ?? this.yTicks;
-    this.formatXAxis = cfg.formatXAxis ?? cfg.xSerie.format ?? this.formatXAxis;
-    this.formatYAxis = cfg.formatYAxis ?? this.formatYAxis;
-    this.chartTitle = cfg.chartTitle ?? this.chartTitle;
     this._selectedSeries = "All";
     this._hiddenSeries = new Set<string>();
     this.requestUpdate();
@@ -288,10 +262,18 @@ export class TimeViz extends LitElement {
     )
       return;
     const chart = createTimeVizChart()
+      .colorScale(this.#colorScale)
       .config(this._config)
-      .series(this.filteredSeries)
       .data(this._data)
-      .colorScale(this.#colorScale);
+      .formatXAxis(this.formatXAxis)
+      .formatYAxis(this.formatYAxis)
+      .isCurved(this.isCurved)
+      .isStatic(this.isStatic)
+      .margin(this.margin)
+      .series(this.filteredSeries)
+      .transitionTime(this.transitionTime)
+      .xTicks(this.xTicks)
+      .yTicks(this.yTicks);
 
     select(this.#svgRef.value).call(chart);
 
@@ -526,14 +508,14 @@ export class TimeViz extends LitElement {
         </div>
 
         <figure>
-          ${this.chartTitle
-            ? html`<h2 class="chart-title">${this.chartTitle}</h2>`
-            : nothing}
+          <slot name="chart-title" class="chart-title"></slot>
           <svg
             ${ref(this.#svgRef)}
             preserveAspectRatio="xMidYMid meet"
             role="img"
-            aria-label=${this.chartTitle || "Time series chart"}
+            aria-label="Time Series Chart"
+            xmlns="http://www.w3.org/2000/svg"
+            xmlns:xlink="http://www.w3.org/1999/xlink"
           ></svg>
         </figure>
       </section>

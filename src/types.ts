@@ -12,18 +12,18 @@ export interface TimeVizConfig<T = ChartDataRow> {
   xSerie: {
     accessor: (row: T) => Date | number;
     label?: string;
-    format?: string;
+    // format?: string;
   };
   ySeries: Array<TimeVizSeriesConfig<T>>;
-  margin?: MarginConfig;
-  isStatic?: boolean;
-  isCurved?: boolean;
-  transitionTime?: number;
-  xTicks?: number;
-  yTicks?: number;
-  formatXAxis?: string;
-  formatYAxis?: string;
-  chartTitle?: string;
+  // margin?: MarginConfig;
+  // isStatic?: boolean;
+  // isCurved?: boolean;
+  // transitionTime?: number;
+  // xTicks?: number;
+  // yTicks?: number;
+  // formatXAxis?: string;
+  // formatYAxis?: string;
+  // chartTitle?: string;
 }
 
 export interface MarginConfig {

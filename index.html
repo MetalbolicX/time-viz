@@ -78,12 +78,16 @@
       </div>
       <time-viz
         id="chart"
-        chart-title="Sample Time Series Data"
         is-static="false"
         is-curved="false"
-        x-ticks="6"
-        y-ticks="8"
-      ></time-viz>
+        x-ticks="8"
+        y-ticks="4"
+        transition-time="3000"
+        format-x-axis="%b %Y"
+        format-y-axis="~s"
+      >
+        <h3 slot="chart-title">Sample Time Series Data</h3>
+      </time-viz>
     </div>
 
     <!-- <div class="demo">
