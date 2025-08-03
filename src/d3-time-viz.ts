@@ -17,15 +17,24 @@ export const createTimeVizChart = () => {
     if (!config || !series?.length || !data?.length) return;
 
     const margin = config.margin ?? {
-      top: 40,
-      right: 80,
-      bottom: 60,
-      left: 60,
+      top: 30,
+      right: 40,
+      bottom: 30,
+      left: 40,
     };
 
-    const { width, height } = selection.node()?.getBoundingClientRect() || {};
-    if (!(width && height)) return;
+    const { width = 0, height = 0 } = selection.node()?.getBoundingClientRect() || {};
+    if (!width || !height) return;
+    const innerWidth = width - (margin.left + margin.right);
+    const innerHeight = height - (margin.top + margin.bottom);
+    if (innerWidth <= 0 && innerHeight <= 0) return;
 
+    const mainGroup = selection
+      .selectAll("g.main")
+      .data([null])
+      .join("g")
+      .attr("class", "main")
+      .attr("transform", `translate(${margin.left}, ${margin.top})`);
     // X scale (time only)
     const xVals = data.map(config.xSerie.accessor);
     const [xMin, xMax] = d3.extent(xVals);
@@ -33,12 +42,12 @@ export const createTimeVizChart = () => {
     const xScale = d3
       .scaleTime()
       .domain([xMin, xMax])
-      .range([config.margin?.left ?? 0, width - (config.margin?.right ?? 0)])
+      .range([0, innerWidth])
       .nice();
 
     // Y scale (all series)
-    const yVals = data.flatMap((row: ChartDataRow) =>
-      series.map((s: TimeVizSeriesConfig) => s.accessor(row))
+    const yVals = data.flatMap((d: ChartDataRow) =>
+      series.map(({ accessor }: TimeVizSeriesConfig) => accessor(d))
     );
 
     const [yMin, yMax] = d3.extent(yVals);
@@ -46,36 +55,32 @@ export const createTimeVizChart = () => {
     const yScale = d3
       .scaleLinear()
       .domain([yMin, yMax])
-      .range([height - (config.margin?.bottom ?? 0), config.margin?.top ?? 0])
+      .range([innerHeight, 0])
       .nice();
 
     // Grid
     const xGrid = d3
       .axisBottom(xScale)
-      .tickSize(-height)
+      .tickSize(-innerHeight)
       .tickFormat(() => "");
     const yGrid = d3
       .axisLeft(yScale)
-      .tickSize(-width)
+      .tickSize(-innerWidth)
       .tickFormat(() => "");
 
-    selection
+    mainGroup
       .selectAll(".x.grid")
       .data([null])
       .join("g")
       .attr("class", "x grid")
-      .attr(
-        "transform",
-        `translate(0, ${height - (config.margin?.bottom ?? 0)})`
-      )
+      .attr("transform", `translate(0, ${innerHeight})`)
       .call(xGrid as any);
 
-    selection
+    mainGroup
       .selectAll(".y.grid")
       .data([null])
       .join("g")
       .attr("class", "y grid")
-      .attr("transform", `translate(${config.margin?.left ?? 0}, 0)`)
       .call(yGrid as any);
 
     // Axes
@@ -89,15 +94,15 @@ export const createTimeVizChart = () => {
       .ticks(config.yTicks ?? 5)
       .tickFormat(d3.format(config.formatYAxis ?? ".2f") as any);
 
-    selection
+    mainGroup
       .selectAll("g.x.axis")
       .data([null])
       .join("g")
       .attr("class", "x axis")
-      .attr("transform", `translate(0,${height})`)
+      .attr("transform", `translate(0,${innerHeight})`)
       .call(xAxis as any);
 
-    selection
+    mainGroup
       .selectAll("g.y.axis")
       .data([null])
       .join("g")
@@ -123,7 +128,7 @@ export const createTimeVizChart = () => {
     const transitionTime =
       isStatic && config.transitionTime ? 0 : config.transitionTime ?? 750;
 
-    selection
+    mainGroup
       .selectAll(".series")
       .data([null])
       .join("g")
