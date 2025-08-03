@@ -9,12 +9,12 @@ export interface TimeVizSeriesConfig<T = ChartDataRow> {
 
 export interface TimeVizConfig<T = ChartDataRow> {
   data: T[];
-  x: {
+  xSerie: {
     accessor: (row: T) => Date | number;
     label?: string;
     format?: string;
   };
-  series: Array<TimeVizSeriesConfig<T>>;
+  ySeries: Array<TimeVizSeriesConfig<T>>;
   margin?: MarginConfig;
   isStatic?: boolean;
   isCurved?: boolean;

@@ -1,4 +1,4 @@
-export { TimeViz } from "./time-viz.js";
+export { TimeViz } from "./time-viz";
 
 // Auto-register the component when the module is imported
-import "./time-viz.js";
+import "./time-viz";

@@ -35,7 +35,7 @@ export const createTimeVizChart = () => {
       .attr("transform", `translate(${margin.left},${margin.top})`);
 
     // X scale (time only)
-    const xVals = data.map(config.x.accessor);
+    const xVals = data.map(config.xSerie.accessor);
     const [xMin, xMax] = d3.extent(xVals);
     if (!(xMin instanceof Date && xMax instanceof Date)) return;
     const xScale = d3.scaleTime().domain([xMin, xMax]).range([0, width]);
@@ -108,7 +108,7 @@ export const createTimeVizChart = () => {
     // Draw lines for each series
     const dataset = series.map((serie) =>
       data.map((d) => ({
-        x: config.x.accessor(d),
+        x: config.xSerie.accessor(d),
         y: serie.accessor(d),
         label: serie.label,
         color: serie.color || colorScale(serie.label),

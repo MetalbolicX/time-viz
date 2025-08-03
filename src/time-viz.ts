@@ -189,8 +189,8 @@ export class TimeViz extends LitElement {
     this._hiddenSeries = new Set<string>();
     this._config = {
       data: [],
-      x: { accessor: (d: ChartDataRow) => d.date as Date },
-      series: [],
+      xSerie: { accessor: (d: ChartDataRow) => d.date as Date },
+      ySeries: [],
     };
   }
 
@@ -203,7 +203,7 @@ export class TimeViz extends LitElement {
     this.transitionTime = cfg.transitionTime ?? this.transitionTime;
     this.xTicks = cfg.xTicks ?? this.xTicks;
     this.yTicks = cfg.yTicks ?? this.yTicks;
-    this.formatXAxis = cfg.formatXAxis ?? cfg.x.format ?? this.formatXAxis;
+    this.formatXAxis = cfg.formatXAxis ?? cfg.xSerie.format ?? this.formatXAxis;
     this.formatYAxis = cfg.formatYAxis ?? this.formatYAxis;
     this.chartTitle = cfg.chartTitle ?? this.chartTitle;
     this._selectedSeries = "All";
@@ -212,18 +212,18 @@ export class TimeViz extends LitElement {
   }
 
   get availableSeries(): string[] {
-    if (!this._config?.series?.length) return [];
-    return this._config.series.map((s) => s.label);
+    if (!this._config?.ySeries?.length) return [];
+    return this._config.ySeries.map((s) => s.label);
   }
 
   get filteredSeries(): TimeVizSeriesConfig[] {
-    if (!this._config?.series?.length) return [];
+    if (!this._config?.ySeries?.length) return [];
     if (this._selectedSeries === "All") {
-      return this._config.series.filter(
+      return this._config.ySeries.filter(
         (s) => !this._hiddenSeries.has(s.label)
       );
     }
-    return this._config.series.filter(
+    return this._config.ySeries.filter(
       (s) =>
         s.label === this._selectedSeries && !this._hiddenSeries.has(s.label)
     );
@@ -268,7 +268,7 @@ export class TimeViz extends LitElement {
   };
 
   private _renderChart(): void {
-    if (!this.svgRef.value || !this._data.length || !this._config.series.length)
+    if (!this.svgRef.value || !this._data.length || !this._config.ySeries.length)
       return;
     const chart = createTimeVizChart()
       .config(this._config)
@@ -456,7 +456,7 @@ export class TimeViz extends LitElement {
 
   render() {
     const series = this.availableSeries;
-    const hasData = this._data.length > 0 && this._config.series.length > 0;
+    const hasData = this._data.length > 0 && this._config.ySeries.length > 0;
 
     return html`
       <section>

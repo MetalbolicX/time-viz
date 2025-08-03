@@ -65,7 +65,7 @@
   </style>
 </head>
 <body>
-  <div class="container">
+  <main class="container">
     <h1>Time Viz Component Demo</h1>
 
     <div class="demo">
@@ -77,7 +77,7 @@
         <button onclick="toggleCurved()">Toggle Curved Lines</button>
       </div>
       <time-viz
-        id="chart1"
+        id="chart"
         chart-title="Sample Time Series Data"
         is-static="false"
         is-curved="false"
@@ -86,7 +86,7 @@
       ></time-viz>
     </div>
 
-    <div class="demo">
+    <!-- <div class="demo">
       <h2>Static Chart (No Interaction)</h2>
       <time-viz
         id="chart2"
@@ -94,10 +94,10 @@
         is-static="true"
         format-x-axis="%b %Y"
       ></time-viz>
-    </div>
-  </div>
+    </div> -->
+  </main>
 
-  <script type="module" src="./src/index.ts"></script>
+  <!-- <script type="module" src="./src/index.ts"></script>
   <script>
     // Sample data generators
     function generateTimeSeriesData(seriesName = "default", points = 50, startDate = new Date(2023, 0, 1)) {
@@ -198,6 +198,7 @@
         loadSampleData();
       }, 100);
     });
-  </script>
+  </script> -->
+  <script type="module" src="./main.ts" lang="ts"></script>
 </body>
 </html>
