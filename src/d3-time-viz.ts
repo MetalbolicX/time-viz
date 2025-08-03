@@ -32,13 +32,14 @@ export const createTimeVizChart = () => {
       .selectAll("g.main")
       .data([null])
       .join("g")
+      .attr("class", "main")
       .attr("transform", `translate(${margin.left},${margin.top})`);
 
     // X scale (time only)
     const xVals = data.map(config.xSerie.accessor);
     const [xMin, xMax] = d3.extent(xVals);
     if (!(xMin instanceof Date && xMax instanceof Date)) return;
-    const xScale = d3.scaleTime().domain([xMin, xMax]).range([0, width]);
+    const xScale = d3.scaleTime().domain([xMin, xMax]).range([0, width]).nice();
 
     // Y scale (all series)
     const yVals = data.flatMap((row: ChartDataRow) =>
@@ -51,8 +52,8 @@ export const createTimeVizChart = () => {
     const yScale = d3
       .scaleLinear()
       .domain([yMin, yMax])
-      .nice()
-      .range([height, 0]);
+      .range([height, 0])
+      .nice();
 
     // Grid
     const xGrid = d3
@@ -65,7 +66,7 @@ export const createTimeVizChart = () => {
       .tickFormat(() => "");
 
     main
-      .selectAll("g.x.grid")
+      .selectAll(".x.grid")
       .data([null])
       .join("g")
       .attr("class", "x grid")
@@ -73,7 +74,7 @@ export const createTimeVizChart = () => {
       .call(xGrid as any);
 
     main
-      .selectAll("g.y.grid")
+      .selectAll(".y.grid")
       .data([null])
       .join("g")
       .attr("class", "y grid")
@@ -117,9 +118,9 @@ export const createTimeVizChart = () => {
     console.log("Dataset for series:", dataset);
 
     const line = d3
-    .line<{ x: number; y: number }>()
-    .x((d) => xScale(d.x))
-    .y((d) => yScale(d.y));
+      .line<{ x: number; y: number }>()
+      .x((d) => xScale(d.x))
+      .y((d) => yScale(d.y));
 
     isCurved && line.curve(d3.curveCatmullRom);
 
@@ -128,7 +129,7 @@ export const createTimeVizChart = () => {
       .data([null])
       .join("g")
       .attr("class", "series")
-      .selectAll("path.serie")
+      .selectAll(".serie")
       .data(dataset)
       .join("path")
       .attr("class", "serie")
