@@ -1,7 +1,20 @@
 import { LitElement, html, css, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { createRef, ref } from "lit/directives/ref.js";
-import { select, scaleOrdinal, schemeCategory10 } from "d3";
+import {
+  select,
+  scaleOrdinal,
+  schemeCategory10,
+  extent,
+  scaleLinear,
+  axisLeft,
+  axisBottom,
+  format,
+  curveMonotoneX,
+  line,
+  scaleTime,
+  timeFormat,
+} from "d3";
 import type {
   TimeVizConfig,
   TimeVizSeriesConfig,
@@ -274,71 +287,97 @@ export class TimeViz extends LitElement {
       !this._config.ySeries.length
     )
       return;
-    const chart = createTimeVizChart()
-      .config(this._config)
-      .series(this.filteredSeries)
-      .data(this._data)
-      .colorScale(this.#colorScale);
+    // const chart = createTimeVizChart()
+    //   .config(this._config)
+    //   .series(this.filteredSeries)
+    //   .data(this._data)
+    //   .colorScale(this.#colorScale);
 
-    select(this.#svgRef.value).call(chart);
-    // if (!this.#svgRef.value || !this._data?.length || !this._config?.series?.length) return;
+    // select(this.#svgRef.value).call(chart);
+    if (
+      !this.#svgRef.value ||
+      !this._data?.length ||
+      !this._config?.ySeries?.length
+    )
+      return;
 
-    // const svg = d3.select(this.svgRef.value);
-    // svg.selectAll("*").remove();
+    const svg = select(this.#svgRef.value);
+    svg.selectAll("*").remove();
 
-    // const containerRect = this.svgRef.value.getBoundingClientRect();
-    // const width = containerRect.width - this.margin.left - this.margin.right;
-    // const height = containerRect.height - this.margin.top - this.margin.bottom;
-    // if (width <= 0 || height <= 0) return;
+    const containerRect = this.#svgRef.value.getBoundingClientRect();
+    const width = containerRect.width - this.margin.left - this.margin.right;
+    const height = containerRect.height - this.margin.top - this.margin.bottom;
+    if (width <= 0 || height <= 0) return;
 
-    // const g = svg.append("g")
-    //   .attr("transform", `translate(${this.margin.left},${this.margin.top})`);
+    const g = svg
+      .append("g")
+      .attr("transform", `translate(${this.margin.left},${this.margin.top})`);
 
-    // // X scale
-    // const xVals = this._data.map(this._config.x.accessor);
-    // const xDomain = d3.extent(xVals) as [Date | number, Date | number];
-    // const isTime = xDomain[0] instanceof Date;
-    // const xScale = isTime
-    //   ? d3.scaleTime().domain(xDomain as [Date, Date]).range([0, width])
-    //   : d3.scaleLinear().domain(xDomain as [number, number]).range([0, width]);
+    // X scale
+    const xVals = this._data.map(this._config.xSerie.accessor);
+    const xDomain = extent(xVals) as [Date | number, Date | number];
+    const isTime = xDomain[0] instanceof Date;
+    const xScale = isTime
+      ? scaleTime()
+          .domain(xDomain as [Date, Date])
+          .range([0, width])
+      : scaleLinear()
+          .domain(xDomain as [number, number])
+          .range([0, width]);
 
-    // // Y scale (all series)
-    // const yVals = this._data.flatMap(row => this.filteredSeries.map(s => s.accessor(row)));
-    // const yDomain = d3.extent(yVals) as [number, number];
-    // const yScale = d3.scaleLinear().domain(yDomain).nice().range([height, 0]);
+    // Y scale (all series)
+    const yVals = this._data.flatMap((row) =>
+      this.filteredSeries.map((s) => s.accessor(row))
+    );
+    const yDomain = extent(yVals) as [number, number];
+    const yScale = scaleLinear().domain(yDomain).nice().range([height, 0]);
 
-    // // Grid
-    // const xGrid = d3.axisBottom(xScale).tickSize(-height).tickFormat(() => "");
-    // const yGrid = d3.axisLeft(yScale).tickSize(-width).tickFormat(() => "");
-    // g.append("g").attr("class", "grid").attr("transform", `translate(0,${height})`).call(xGrid);
-    // g.append("g").attr("class", "grid").call(yGrid);
+    // Grid
+    const xGrid = axisBottom(xScale)
+      .tickSize(-height)
+      .tickFormat(() => "");
+    const yGrid = axisLeft(yScale)
+      .tickSize(-width)
+      .tickFormat(() => "");
+    g.append("g")
+      .attr("class", "grid")
+      .attr("transform", `translate(0,${height})`)
+      .call(xGrid);
+    g.append("g").attr("class", "grid").call(yGrid);
 
-    // // Axes
-    // const xAxis = d3.axisBottom(xScale)
-    //   .ticks(this.xTicks)
-    //   .tickFormat(
-    //     isTime
-    //       ? d3.timeFormat(this.formatXAxis) as any
-    //       : d3.format(this.formatXAxis) as any
-    //   );
-    // const yAxis = d3.axisLeft(yScale)
-    //   .ticks(this.yTicks)
-    //   .tickFormat(d3.format(this.formatYAxis) as any);
-    // g.append("g").attr("class", "axis").attr("transform", `translate(0,${height})`).call(xAxis);
-    // g.append("g").attr("class", "axis").call(yAxis);
+    // Axes
+    const xAxis = axisBottom(xScale)
+      .ticks(this.xTicks)
+      .tickFormat(
+        isTime
+          ? (timeFormat(this.formatXAxis) as any)
+          : (format(this.formatXAxis) as any)
+      );
+    const yAxis = axisLeft(yScale)
+      .ticks(this.yTicks)
+      .tickFormat(format(this.formatYAxis) as any);
+    g.append("g")
+      .attr("class", "axis")
+      .attr("transform", `translate(0,${height})`)
+      .call(xAxis);
+    g.append("g").attr("class", "axis").call(yAxis);
 
-    // // Draw lines for each series
-    // for (const serie of this.filteredSeries) {
-    //   const line = d3.line<ChartDataRow>()
-    //     .x(d => xScale(this._config.x.accessor(d)))
-    //     .y(d => yScale(serie.accessor(d)));
-    //   if (this.isCurved) line.curve(d3.curveMonotoneX);
-    //   g.append("path")
-    //     .datum(this._data)
-    //     .attr("class", "line")
-    //     .attr("d", line)
-    //     .style("stroke", serie.color || this.colorScale(serie.label) as string);
-    // }
+    // Draw lines for each series
+    for (const serie of this.filteredSeries) {
+      const linePath = line<ChartDataRow>()
+        .x((d) => xScale(this._config.xSerie.accessor(d)))
+        .y((d) => yScale(serie.accessor(d)));
+      if (this.isCurved) linePath.curve(curveMonotoneX);
+      g.append("path")
+        .datum(this._data)
+        .attr("class", "line")
+        .attr("d", linePath)
+        .attr("fill", "none")
+        .style(
+          "stroke",
+          serie.color || (this.#colorScale(serie.label) as string)
+        );
+    }
 
     // // Cursor interaction (only if not static)
     // if (!this.isStatic) {
@@ -471,7 +510,9 @@ export class TimeViz extends LitElement {
             ?disabled=${!hasData}
           >
             <option value="All">All Series</option>
-            ${seriesLabels.map((label) => html`<option value=${label}>${label}</option>`)}
+            ${seriesLabels.map(
+              (label) => html`<option value=${label}>${label}</option>`
+            )}
           </select>
 
           <button
