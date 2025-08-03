@@ -78,131 +78,15 @@
       </div>
       <time-viz
         id="chart"
-        is-static="false"
-        is-curved="false"
         x-ticks="8"
         y-ticks="4"
         transition-time="3000"
-        format-x-axis="%b %Y"
+        format-x-axis="%b %y"
         format-y-axis="~s"
       >
         <h3 slot="chart-title">Sample Time Series Data</h3>
       </time-viz>
     </div>
-
-    <!-- <div class="demo">
-      <h2>Static Chart (No Interaction)</h2>
-      <time-viz
-        id="chart2"
-        chart-title="Static Time Series"
-        is-static="true"
-        format-x-axis="%b %Y"
-      ></time-viz>
-    </div> -->
-  </main>
-
-  <!-- <script type="module" src="./src/index.ts"></script>
-  <script>
-    // Sample data generators
-    function generateTimeSeriesData(seriesName = "default", points = 50, startDate = new Date(2023, 0, 1)) {
-      const data = [];
-      let currentValue = Math.random() * 100 + 50;
-
-      for (let i = 0; i < points; i++) {
-        const date = new Date(startDate);
-        date.setDate(date.getDate() + i * 7); // Weekly data
-
-        currentValue += (Math.random() - 0.5) * 20;
-        currentValue = Math.max(10, Math.min(200, currentValue));
-
-        data.push({
-          date: date,
-          value: Math.round(currentValue * 100) / 100,
-          series: seriesName
-        });
-      }
-
-      return data;
-    }
-
-
-    // Wide-format data generator for multiple series
-    function generateWideTimeSeriesData(points = 30, startDate = new Date(2023, 0, 1)) {
-      const data = [];
-      let sales = Math.random() * 100 + 50;
-      let revenue = Math.random() * 100 + 100;
-      let profit = Math.random() * 50 + 20;
-      for (let i = 0; i < points; i++) {
-        const date = new Date(startDate);
-        date.setDate(date.getDate() + i * 7);
-        sales += (Math.random() - 0.5) * 20;
-        revenue += (Math.random() - 0.5) * 30;
-        profit += (Math.random() - 0.5) * 10;
-        data.push({
-          date,
-          sales: Math.round(sales * 100) / 100,
-          revenue: Math.round(revenue * 100) / 100,
-          profit: Math.round(profit * 100) / 100
-        });
-      }
-      return data;
-    }
-
-    function loadSampleData() {
-      const chart = document.getElementById("chart1");
-      const data = generateWideTimeSeriesData(30);
-      chart.config = {
-        data: data,
-        x: { accessor: d => d.date, label: "Date" },
-        series: [
-          { accessor: d => d.sales, label: "Sales", color: "blue" },
-          { accessor: d => d.revenue, label: "Revenue", color: "green" },
-          { accessor: d => d.profit, label: "Profit", color: "orange" }
-        ]
-      };
-    }
-
-    function loadMultiSeriesData() {
-      const chart1 = document.getElementById("chart1");
-      const chart2 = document.getElementById("chart2");
-      const data = generateWideTimeSeriesData(40);
-      chart1.config = {
-        data: data,
-        x: { accessor: d => d.date, label: "Date" },
-        series: [
-          { accessor: d => d.sales, label: "Sales", color: "blue" },
-          { accessor: d => d.revenue, label: "Revenue", color: "green" },
-          { accessor: d => d.profit, label: "Profit", color: "orange" }
-        ]
-      };
-      chart2.config = {
-        data: data,
-        x: { accessor: d => d.date, label: "Date" },
-        series: [
-          { accessor: d => d.sales, label: "Sales", color: "blue" },
-          { accessor: d => d.revenue, label: "Revenue", color: "green" },
-          { accessor: d => d.profit, label: "Profit", color: "orange" }
-        ]
-      };
-    }
-
-    function toggleStatic() {
-      const chart = document.getElementById("chart1");
-      chart.isStatic = !chart.isStatic;
-    }
-
-    function toggleCurved() {
-      const chart = document.getElementById("chart1");
-      chart.isCurved = !chart.isCurved;
-    }
-
-    // Initialize with sample data
-    document.addEventListener("DOMContentLoaded", () => {
-      setTimeout(() => {
-        loadSampleData();
-      }, 100);
-    });
-  </script> -->
   <script type="module" src="./main.ts" lang="ts"></script>
 </body>
 </html>

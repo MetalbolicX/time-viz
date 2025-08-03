@@ -29,7 +29,8 @@ export const createTimeVizChart = () => {
 
     const { width = 0, height = 0 } =
       selection.node()?.getBoundingClientRect() || {};
-    if (!width || !height) return;
+    if (!(width && height)) return;
+    selection.attr("viewBox", `0 0 ${width} ${height}`);
     const innerWidth = width - (margin.left + margin.right);
     const innerHeight = height - (margin.top + margin.bottom);
     if (innerWidth <= 0 && innerHeight <= 0) return;
@@ -155,26 +156,47 @@ export const createTimeVizChart = () => {
         (exit) => exit.remove()
       );
 
-    // // EXIT
-    // serieSelection.exit().remove();
-
-    // // UPDATE
-    // serieSelection
-    //   .attr("d", (_, i) => lineGenerators[i](data))
-    //   .style("stroke", ({ color, label }) => color || colorScale(label));
-
-    // // ENTER
-    // serieSelection
-    //   .enter()
-    //   .append("path")
-    //   .attr("class", "serie")
-    //   .attr("d", (_, i) => lineGenerators[i](data))
-    //   .style("stroke", ({ color, label }) => color || colorScale(label));
-
     // Cursor interaction (only if not static)
-    if (!isStatic) {
-      // ...cursor logic can be added here if needed...
-    }
+    if (isStatic) return;
+      selection.on("mousemove", (event) => {
+        const [mouseX, mouseY] = d3.pointer(event);
+        const [xMinRange, xMaxRange] = xScale.range();
+        const [yMaxRange, yMinRange] = yScale.range();
+        // Check if mouse is within the chart area
+    const isWithinXAxis = mouseX >= xMinRange && mouseX <= xMaxRange;
+    const isWithinYAxis = mouseY >= yMinRange && mouseY <= yMaxRange;
+        if (!(isWithinXAxis && isWithinYAxis)) {
+          mainGroup.selectAll(".cursor").remove();
+          return;
+        }
+        const [firstRow] = data;
+        if (!firstRow) return;
+        const closestDatum = data.reduce((closest, d) => {
+          const xValue = config.xSerie.accessor(d);
+          const closestXValue = config.xSerie.accessor(closest);
+          return Math.abs(xScale(xValue) - mouseX) <
+            Math.abs(xScale(closestXValue) - mouseX)
+            ? d
+            : closest;
+        }, firstRow)
+
+        const cursorGroup = mainGroup
+          .selectAll("g.cursor")
+          .data([null])
+          .join("g")
+          .attr("class", "cursor");
+
+        cursorGroup
+          .selectAll<SVGLineElement, ChartDataRow>(".cursor-line")
+          .data([closestDatum])
+          .join("line")
+          .attr("class", "cursor-line")
+          .attr("x1", (d) => xScale(config.xSerie.accessor(d)))
+          .attr("y1", yMinRange)
+          .attr("x2", (d) => xScale(config.xSerie.accessor(d)))
+          .attr("y2", yMaxRange);
+
+      });
     // Legend and other features can be added similarly
   };
 

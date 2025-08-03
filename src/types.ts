@@ -4,7 +4,6 @@ export interface TimeVizSeriesConfig<T = ChartDataRow> {
   accessor: (row: T) => number;
   label: string;
   color?: string;
-  format?: string;
 }
 
 export interface TimeVizConfig<T = ChartDataRow> {
@@ -15,15 +14,6 @@ export interface TimeVizConfig<T = ChartDataRow> {
     // format?: string;
   };
   ySeries: Array<TimeVizSeriesConfig<T>>;
-  // margin?: MarginConfig;
-  // isStatic?: boolean;
-  // isCurved?: boolean;
-  // transitionTime?: number;
-  // xTicks?: number;
-  // yTicks?: number;
-  // formatXAxis?: string;
-  // formatYAxis?: string;
-  // chartTitle?: string;
 }
 
 export interface MarginConfig {

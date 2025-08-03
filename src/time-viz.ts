@@ -172,7 +172,7 @@ export class TimeViz extends LitElement {
 
   constructor() {
     super();
-    this.isStatic = true;
+    this.isStatic = false;
     this.transitionTime = 0;
     this.isCurved = false;
     this.margin = { top: 40, right: 80, bottom: 60, left: 60 };
@@ -261,6 +261,7 @@ export class TimeViz extends LitElement {
       !this._config.ySeries.length
     )
       return;
+    console.log(this.isStatic);
     const chart = createTimeVizChart()
       .colorScale(this.#colorScale)
       .config(this._config)
