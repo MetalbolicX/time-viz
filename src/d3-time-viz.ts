@@ -7,6 +7,22 @@ import type {
   MarginConfig,
 } from "./types";
 
+import "tipviz";
+import type { TipVizTooltip } from "tipviz";
+
+/**
+ * @module d3-time-viz
+ * @description
+ * This module provides a function to create a time visualization chart using D3.js.
+ * It allows for multiple series, custom colors, and various configurations.
+ */
+
+/**
+ * Creates a time visualization chart using D3.js.
+ * The chart supports multiple series, custom colors, and various configurations.
+ *
+ * @returns {Function} A function that can be called with a D3 selection to render the chart.
+ */
 export const createTimeVizChart = () => {
   let config: TimeVizConfig;
   let series: TimeVizSeriesConfig[];
@@ -30,6 +46,8 @@ export const createTimeVizChart = () => {
   let innerHeight: number = 0;
   let xScale: d3.ScaleTime<number, number>;
   let yScale: d3.ScaleLinear<number, number>;
+  let yAxisLabel: string = "";
+  let xAxisLabel: string = "";
 
   /**
    * Utility function to get the size of the SVG element.
@@ -223,7 +241,46 @@ export const createTimeVizChart = () => {
       .attr("cy", ({ accessor }) => yScale(accessor(closestRow)))
       .attr("r", 4)
       .style("stroke", ({ color, label }) => color || colorScale(label));
-  }
+  };
+
+  const renderYAxisLabel = (
+    selection: Selection<SVGElement, unknown, null, undefined>
+  ): void => {
+    if (!yAxisLabel) return;
+    selection
+      .selectAll(".labels")
+      .data([null])
+      .join("g")
+      .attr("class", "labels")
+      .selectAll(".y.axis-label")
+      .data([yAxisLabel])
+      .join("text")
+      .attr("class", "y axis-label")
+      .attr("x", -margin.left)
+      .attr("y", margin.top)
+      .attr("transform", `rotate(-90, ${margin.left}, ${margin.top})`)
+      .attr("dy", "1em")
+      .text((d) => d);
+  };
+
+  const renderXAxisLabel = (
+    selection: Selection<SVGElement, unknown, null, undefined>
+  ): void => {
+    if (!xAxisLabel) return;
+    selection
+      .selectAll(".labels")
+      .data([null])
+      .join("g")
+      .attr("class", "labels")
+      .selectAll(".x.axis-label")
+      .data([xAxisLabel])
+      .join("text")
+      .attr("class", "x axis-label")
+      .attr("x", innerWidth / 2 + margin.left)
+      .attr("y", innerHeight + margin.top)
+      .attr("dy", "-0.5em")
+      .text((d) => d);
+  };
 
   const chart = (
     selection: Selection<SVGElement, unknown, null, undefined>
@@ -264,8 +321,10 @@ export const createTimeVizChart = () => {
     selection
       .call(renderXAxis)
       .call(renderXGrid)
+      .call(renderXAxisLabel)
       .call(renderYAxis)
       .call(renderYGrid)
+      .call(renderYAxisLabel)
       .call(renderSeries);
 
     // Cursor interaction (only if not static)
@@ -314,6 +373,8 @@ export const createTimeVizChart = () => {
   );
   chart.formatXAxis = (format: string) => ((formatXAxis = format), chart);
   chart.formatYAxis = (format: string) => ((formatYAxis = format), chart);
+  chart.yAxisLabel = (label: string) => ((yAxisLabel = label), chart);
+  chart.xAxisLabel = (label: string) => ((xAxisLabel = label), chart);
 
   return chart;
 };

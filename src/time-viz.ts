@@ -132,6 +132,11 @@ export class TimeViz extends LitElement {
     .legend-item.hidden {
       opacity: 0.3;
     }
+
+    .axis-label {
+      font-size: 0.8em;
+      text-anchor: middle;
+    }
   `;
 
   @property({ type: Boolean, attribute: "is-static" })
@@ -157,6 +162,12 @@ export class TimeViz extends LitElement {
 
   @property({ type: String, attribute: "format-y-axis" })
   declare formatYAxis: string;
+
+  @property({ type: String, attribute: "y-axis-label" })
+  declare yAxisLabel: string;
+
+  @property({ type: String, attribute: "x-axis-label" })
+  declare xAxisLabel: string;
 
   @state()
   private declare _config: TimeVizConfig;
@@ -188,6 +199,8 @@ export class TimeViz extends LitElement {
       xSerie: { accessor: (d: ChartDataRow) => d.date as Date },
       ySeries: [],
     };
+    this.yAxisLabel = "";
+    this.xAxisLabel = "";
   }
 
   public set config(cfg: TimeVizConfig) {
@@ -214,6 +227,10 @@ export class TimeViz extends LitElement {
       ({ label }) =>
         label === this._selectedSeries && !this._hiddenSeries.has(label)
     );
+  }
+
+  public tooltipContent(content: (...args: any[]) => string): void {
+    // Implementation for setting the tooltip content
   }
 
   protected updated(
@@ -273,6 +290,8 @@ export class TimeViz extends LitElement {
       .series(this.filteredSeries)
       .transitionTime(this.transitionTime)
       .xTicks(this.xTicks)
+      .xAxisLabel(this.xAxisLabel)
+      .yAxisLabel(this.yAxisLabel)
       .yTicks(this.yTicks);
 
     select(this.#svgRef.value).call(chart);
@@ -480,7 +499,7 @@ export class TimeViz extends LitElement {
   //   }
   // }
 
-  render() {
+  public render() {
     const seriesLabels = this.ySeriesLabels;
     const hasData = this._data.length > 0 && this._config.ySeries.length > 0;
 
