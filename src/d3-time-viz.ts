@@ -1,6 +1,11 @@
 import * as d3 from "d3";
 import type { Selection, ScaleOrdinal } from "d3";
-import type { TimeVizConfig, TimeVizSeriesConfig, ChartDataRow, MarginConfig } from "./types";
+import type {
+  TimeVizConfig,
+  TimeVizSeriesConfig,
+  ChartDataRow,
+  MarginConfig,
+} from "./types";
 
 export const createTimeVizChart = () => {
   let config: TimeVizConfig;
@@ -20,6 +25,36 @@ export const createTimeVizChart = () => {
   };
   let formatXAxis: string = "%Y-%m-%d";
   let formatYAxis: string = ".2f";
+  let xSerie: (d: ChartDataRow) => Date | number;
+  let innerWidth: number = 0;
+  let innerHeight: number = 0;
+  let xScale: d3.ScaleTime<number, number>;
+  let yScale: d3.ScaleLinear<number, number>;
+
+  const getSize = (
+    selection: Selection<SVGElement, unknown, null, undefined>
+  ) => {
+    const { width = 0, height = 0 } =
+      selection.node()?.getBoundingClientRect() || {};
+    return { width, height };
+  };
+
+  const renderXAxis = (
+    selection: Selection<SVGElement, unknown, null, undefined>
+  ): void => {
+    const xAxis = d3
+      .axisBottom(xScale)
+      .ticks(xTicks)
+      .tickFormat(d3.timeFormat(formatXAxis) as any);
+
+      selection
+      .selectAll("g.x.axis")
+      .data([null])
+      .join("g")
+      .attr("class", "x axis")
+      .attr("transform", `translate(0, ${innerHeight})`)
+      .call(xAxis as any);
+  }
 
   const chart = (
     selection: Selection<SVGElement, unknown, null, undefined>
@@ -27,12 +62,11 @@ export const createTimeVizChart = () => {
     // selection.selectAll("*").remove();
     if (!config || !series?.length || !data?.length) return;
 
-    const { width = 0, height = 0 } =
-      selection.node()?.getBoundingClientRect() || {};
+    const { width, height } = getSize(selection);
     if (!(width && height)) return;
     selection.attr("viewBox", `0 0 ${width} ${height}`);
-    const innerWidth = width - (margin.left + margin.right);
-    const innerHeight = height - (margin.top + margin.bottom);
+    innerWidth = width - (margin.left + margin.right);
+    innerHeight = height - (margin.top + margin.bottom);
     if (innerWidth <= 0 && innerHeight <= 0) return;
 
     const mainGroup = selection
@@ -42,14 +76,11 @@ export const createTimeVizChart = () => {
       .attr("class", "main")
       .attr("transform", `translate(${margin.left}, ${margin.top})`);
     // X scale (time only)
-    const xVals = data.map(config.xSerie.accessor);
+    xSerie = config.xSerie.accessor;
+    const xVals = data.map(xSerie);
     const [xMin, xMax] = d3.extent(xVals);
     if (!(xMin instanceof Date && xMax instanceof Date)) return;
-    const xScale = d3
-      .scaleTime()
-      .domain([xMin, xMax])
-      .range([0, innerWidth])
-      .nice();
+    xScale = d3.scaleTime().domain([xMin, xMax]).range([0, innerWidth]).nice();
 
     // Y scale (all series)
     const yVals = data.flatMap((d: ChartDataRow) =>
@@ -57,56 +88,57 @@ export const createTimeVizChart = () => {
     );
 
     const [yMin, yMax] = d3.extent(yVals);
-    if (typeof yMin !== "number" || typeof yMax !== "number") return;
-    const yScale = d3
+    if (!(typeof yMin === "number" && typeof yMax === "number")) return;
+    yScale = d3
       .scaleLinear()
       .domain([yMin, yMax])
       .range([innerHeight, 0])
       .nice();
 
-    // Grid
-    const xGrid = d3
-      .axisBottom(xScale)
-      .tickSize(-innerHeight)
-      .tickFormat(() => "");
-    const yGrid = d3
-      .axisLeft(yScale)
-      .tickSize(-innerWidth)
-      .tickFormat(() => "");
+    // // Grid
+    // const xGrid = d3
+    //   .axisBottom(xScale)
+    //   .tickSize(-innerHeight)
+    //   .tickFormat(() => "");
+    // const yGrid = d3
+    //   .axisLeft(yScale)
+    //   .tickSize(-innerWidth)
+    //   .tickFormat(() => "");
 
-    mainGroup
-      .selectAll(".x.grid")
-      .data([null])
-      .join("g")
-      .attr("class", "x grid")
-      .attr("transform", `translate(0, ${innerHeight})`)
-      .call(xGrid as any);
+    // mainGroup
+    //   .selectAll(".x.grid")
+    //   .data([null])
+    //   .join("g")
+    //   .attr("class", "x grid")
+    //   .attr("transform", `translate(0, ${innerHeight})`)
+    //   .call(xGrid as any);
 
-    mainGroup
-      .selectAll(".y.grid")
-      .data([null])
-      .join("g")
-      .attr("class", "y grid")
-      .call(yGrid as any);
+    // mainGroup
+    //   .selectAll(".y.grid")
+    //   .data([null])
+    //   .join("g")
+    //   .attr("class", "y grid")
+    //   .call(yGrid as any);
 
     // Axes
-    const xAxis = d3
-      .axisBottom(xScale)
-      .ticks(xTicks)
-      .tickFormat(d3.timeFormat(formatXAxis ?? "%Y-%m-%d") as any);
+    // const xAxis = d3
+    //   .axisBottom(xScale)
+    //   .ticks(xTicks)
+    //   .tickFormat(d3.timeFormat(formatXAxis ?? "%Y-%m-%d") as any);
 
+    //   mainGroup
+    //     .selectAll("g.x.axis")
+    //     .data([null])
+    //     .join("g")
+    //     .attr("class", "x axis")
+    //     .attr("transform", `translate(0, ${innerHeight})`)
+    //     .call(xAxis as any);
+    selection.call(renderXAxis);
     const yAxis = d3
       .axisLeft(yScale)
       .ticks(yTicks)
       .tickFormat(d3.format(formatYAxis ?? ".2f"));
 
-    mainGroup
-      .selectAll("g.x.axis")
-      .data([null])
-      .join("g")
-      .attr("class", "x axis")
-      .attr("transform", `translate(0, ${innerHeight})`)
-      .call(xAxis as any);
 
     mainGroup
       .selectAll("g.y.axis")
@@ -119,7 +151,7 @@ export const createTimeVizChart = () => {
     const lineGenerators = series.map(({ accessor }) => {
       const line = d3
         .line<ChartDataRow>()
-        .x((d) => xScale(config.xSerie.accessor(d)))
+        .x((d) => xScale(xSerie(d)))
         .y((d) => yScale(accessor(d)));
       isCurved && line.curve(d3.curveCatmullRom);
       return line;
@@ -158,49 +190,51 @@ export const createTimeVizChart = () => {
 
     // Cursor interaction (only if not static)
     if (isStatic) return;
-      selection.on("mousemove", (event) => {
-        const [mouseX, mouseY] = d3.pointer(event);
-        const [xMinRange, xMaxRange] = xScale.range();
-        const [yMaxRange, yMinRange] = yScale.range();
-        // Check if mouse is within the chart area
-    const isWithinXAxis = mouseX >= xMinRange && mouseX <= xMaxRange;
-    const isWithinYAxis = mouseY >= yMinRange && mouseY <= yMaxRange;
-        if (!(isWithinXAxis && isWithinYAxis)) {
-          mainGroup.selectAll(".cursor").remove();
-          return;
-        }
-        const [firstRow] = data;
-        if (!firstRow) return;
-        const closestDatum = data.reduce((closest, d) => {
-          const xValue = config.xSerie.accessor(d);
-          const closestXValue = config.xSerie.accessor(closest);
-          return Math.abs(xScale(xValue) - mouseX) <
-            Math.abs(xScale(closestXValue) - mouseX)
-            ? d
-            : closest;
-        }, firstRow)
+    selection.on("mousemove", (event) => {
+      const [mouseX, mouseY] = d3.pointer(event);
+      const [xMinRange, xMaxRange] = xScale.range();
+      const [yMaxRange, yMinRange] = yScale.range();
+      // Check if mouse is within the chart area
+      const isWithinXAxis = mouseX >= xMinRange && mouseX <= xMaxRange;
+      const isWithinYAxis = mouseY >= yMinRange && mouseY <= yMaxRange;
+      if (!(isWithinXAxis && isWithinYAxis)) {
+        mainGroup.selectAll(".cursor").remove();
+        return;
+      }
+      const [firstRow] = data;
+      if (!firstRow) return;
+      const closestDatum = data.reduce((closest, d) => {
+        const xValue = xSerie(d);
+        const closestXValue = xSerie(closest);
+        return Math.abs(xScale(xValue) - mouseX) <
+          Math.abs(xScale(closestXValue) - mouseX)
+          ? d
+          : closest;
+      }, firstRow);
 
-        const cursorGroup = mainGroup
-          .selectAll("g.cursor")
-          .data([null])
-          .join("g")
-          .attr("class", "cursor");
+      const cursorGroup = mainGroup
+        .selectAll("g.cursor")
+        .data([null])
+        .join("g")
+        .attr("class", "cursor");
 
-        cursorGroup
-          .selectAll<SVGLineElement, ChartDataRow>(".cursor-line")
-          .data([closestDatum])
-          .join("line")
-          .attr("class", "cursor-line")
-          .attr("x1", (d) => xScale(config.xSerie.accessor(d)))
-          .attr("y1", yMinRange)
-          .attr("x2", (d) => xScale(config.xSerie.accessor(d)))
-          .attr("y2", yMaxRange);
-
-      });
+      cursorGroup
+        // .selectAll<SVGLineElement, ChartDataRow>(".cursor-line")
+        .selectAll(".cursor-line")
+        .data([null])
+        .join("line")
+        .attr("class", "cursor-line")
+        .attr("x1", xScale(xSerie(closestDatum)))
+        .attr("y1", yMinRange)
+        .attr("x2", xScale(xSerie(closestDatum)))
+        .attr("y2", yMaxRange);
+    });
     // Legend and other features can be added similarly
   };
 
-  chart.config = (configuration: TimeVizConfig) => ((config = configuration), chart);
+  chart.config = (configuration: TimeVizConfig) => (
+    (config = configuration), chart
+  );
   chart.series = (fields: TimeVizSeriesConfig[]) => ((series = fields), chart);
   chart.data = (dataset: ChartDataRow[]) => ((data = dataset), chart);
   chart.colorScale = (color: ScaleOrdinal<string, string>) => (
@@ -211,7 +245,9 @@ export const createTimeVizChart = () => {
   chart.transitionTime = (time: number) => ((transitionTime = time), chart);
   chart.xTicks = (quantity: number) => ((xTicks = quantity), chart);
   chart.yTicks = (quantity: number) => ((yTicks = quantity), chart);
-  chart.margin = (marg: MarginConfig) => ((margin = { ...margin, ...marg }), chart);
+  chart.margin = (marg: MarginConfig) => (
+    (margin = { ...margin, ...marg }), chart
+  );
   chart.formatXAxis = (format: string) => ((formatXAxis = format), chart);
   chart.formatYAxis = (format: string) => ((formatYAxis = format), chart);
 

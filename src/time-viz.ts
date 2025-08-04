@@ -261,7 +261,6 @@ export class TimeViz extends LitElement {
       !this._config.ySeries.length
     )
       return;
-    console.log(this.isStatic);
     const chart = createTimeVizChart()
       .colorScale(this.#colorScale)
       .config(this._config)
