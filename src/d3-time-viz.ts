@@ -386,8 +386,6 @@ export const createTimeVizChart = () => {
     innerHeight = height - (margin.top + margin.bottom);
     if (innerWidth <= 0 && innerHeight <= 0) return;
 
-    // Set scales
-    xSerie = config.xSerie.accessor;
     const xVals = data.map(xSerie);
     const [xMin, xMax] = d3.extent(xVals);
     if (!(xMin instanceof Date && xMax instanceof Date)) return;
@@ -448,6 +446,9 @@ export const createTimeVizChart = () => {
     });
   };
 
+  chart.xSerie = (accessor: (d: ChartDataRow) => Date | number) => (
+    (xSerie = accessor), chart
+  );
   chart.config = (configuration: TimeVizConfig) => (
     (config = configuration), chart
   );

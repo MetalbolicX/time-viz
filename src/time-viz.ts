@@ -295,6 +295,7 @@ export class TimeViz extends LitElement {
       .transitionTime(this.transitionTime)
       .xTicks(this.xTicks)
       .xAxisLabel(this.xAxisLabel)
+      .xSerie(this._config.xSerie.accessor)
       .yAxisLabel(this.yAxisLabel)
       .yTicks(this.yTicks);
 
