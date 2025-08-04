@@ -51,7 +51,10 @@ export const createTimeVizChart = () => {
 
   /**
    * Utility function to get the size of the SVG element.
-   * Returns an object with width and height properties.
+   * @description
+   * It retrieves the width and height of the SVG element from its bounding client rectangle.
+   * @param {Selection<SVGElement, unknown, null, undefined>} selection - The D3 selection of the SVG element.
+   * @returns {Object} An object containing the width and height of the SVG element.
    */
   const getSize = (
     selection: Selection<SVGElement, unknown, null, undefined>
@@ -63,7 +66,11 @@ export const createTimeVizChart = () => {
 
   /**
    * Renders the X axis of the chart.
+   * @description
    * The X axis is scaled based on the xSerie accessor and formatted according to `formatXAxis`.
+   * It uses the X scale to determine the positions of the ticks.
+   * @param {Selection<SVGElement, unknown, null, undefined>} selection - The D3 selection of the SVG element.
+   * @returns {void}
    */
   const renderXAxis = (
     selection: Selection<SVGElement, unknown, null, undefined>
@@ -84,8 +91,11 @@ export const createTimeVizChart = () => {
 
   /**
    * Renders the Y axis of the chart.
+   * @description
    * The Y axis is scaled based on the data and series provided.
    * It uses a linear scale and formats the ticks according to `formatYAxis`.
+   * @param {Selection<SVGElement, unknown, null, undefined>} selection - The D3 selection of the SVG element.
+   * @returns {void}
    */
   const renderYAxis = (
     selection: Selection<SVGElement, unknown, null, undefined>
@@ -106,7 +116,11 @@ export const createTimeVizChart = () => {
 
   /**
    * Renders the X grid lines on the chart.
+   * @description
    * The grid lines are drawn at each tick of the X scale.
+   * It uses the X scale to determine the positions of the grid lines.
+   * @param {Selection<SVGElement, unknown, null, undefined>} selection - The D3 selection of the SVG element.
+   * @returns {void}
    */
   const renderXGrid = (
     selection: Selection<SVGElement, unknown, null, undefined>
@@ -129,7 +143,11 @@ export const createTimeVizChart = () => {
 
   /**
    * Renders the Y grid lines on the chart.
+   * @description
    * The grid lines are drawn at each tick of the Y scale.
+   * It uses the Y scale to determine the positions of the grid lines.
+   * @param {Selection<SVGElement, unknown, null, undefined>} selection - The D3 selection of the SVG element.
+   * @returns {void}
    */
   const renderYGrid = (
     selection: Selection<SVGElement, unknown, null, undefined>
@@ -152,8 +170,11 @@ export const createTimeVizChart = () => {
 
   /**
    * Renders the series lines on the chart.
+   * @description
    * Each series is represented by a path element.
    * The lines can be curved based on the `isCurved` flag.
+   * @param {Selection<SVGElement, unknown, null, undefined>} selection - The D3 selection of the SVG element.
+   * @returns {void}
    */
   const renderSeries = (
     selection: Selection<SVGElement, unknown, null, undefined>
@@ -207,8 +228,12 @@ export const createTimeVizChart = () => {
 
   /**
    * Renders the cursor on the chart.
+   * @description
    * The cursor is a vertical line and points that follow the mouse position.
    * It highlights the closest data point to the mouse position.
+   * @param {Selection<SVGElement, unknown, null, undefined>} selection - The D3 selection of the SVG element.
+   * @param {ChartDataRow} closestRow - The closest data row to the mouse position.
+   * @returns {void}
    */
   const renderCursor = (
     selection: Selection<SVGElement, unknown, null, undefined>,
@@ -243,6 +268,14 @@ export const createTimeVizChart = () => {
       .style("stroke", ({ color, label }) => color || colorScale(label));
   };
 
+  /**
+   * Renders the Y axis label on the chart.
+   * @description
+   * The Y axis label is positioned at the left side of the chart.
+   * It is rotated to be vertical and positioned according to the margin.
+   * @param {Selection<SVGElement, unknown, null, undefined>} selection - The D3 selection of the SVG element.
+   * @returns {void}
+   */
   const renderYAxisLabel = (
     selection: Selection<SVGElement, unknown, null, undefined>
   ): void => {
@@ -263,6 +296,14 @@ export const createTimeVizChart = () => {
       .text((d) => d);
   };
 
+  /**
+   * Renders the X axis label on the chart.
+   * @description
+   * The X axis label is positioned at the bottom of the chart.
+   * It is centered horizontally and positioned according to the margin.
+   * @param {Selection<SVGElement, unknown, null, undefined>} selection - The D3 selection of the SVG element.
+   * @returns {void}
+   */
   const renderXAxisLabel = (
     selection: Selection<SVGElement, unknown, null, undefined>
   ): void => {
@@ -282,6 +323,57 @@ export const createTimeVizChart = () => {
       .text((d) => d);
   };
 
+  const renderLegend = (
+    selection: Selection<SVGElement, unknown, null, undefined>
+  ): void => {
+    if (!config || !series?.length) return;
+
+    const legendGroup = selection
+      .selectAll("g.legend")
+      .data([null])
+      .join("g")
+      .attr("class", "legend")
+      .attr("transform", `translate(${innerWidth}, ${margin.top})`);
+
+    legendGroup
+      .selectAll(".legend-item")
+      .data(series)
+      .join("g")
+      .attr("class", "legend-item")
+      .attr("data-label", ({ label }) => label)
+      .attr("transform", (_, i) => `translate(0, ${20 * i})`)
+      .call(group => {
+        group
+          .selectAll("rect")
+          .data(d => [d])
+          .join("rect")
+          .attr("class", "legend-square")
+          .style("fill", ({ color, label }) => color || colorScale(label));
+
+        group
+          .selectAll("text")
+          .data(d => [d])
+          .join("text")
+          .attr("class", "legend-label")
+          .attr("x", 20)
+          .attr("y", 14)
+          .text(({ label }) => label);
+      });
+  }
+
+  /**
+   * The main chart function that renders the time visualization.
+   * @description
+   * It sets up the SVG element, scales, axes, grids, series, and cursor.
+   * @param {Selection<SVGElement, unknown, null, undefined>} selection - The D3 selection of the SVG element.
+   * @returns {void}
+   * @example
+   * ```ts
+   * const svg = d3.select("svg");
+   * const chart = createTimeVizChart();
+   * chart(svg);
+   * ```
+   */
   const chart = (
     selection: Selection<SVGElement, unknown, null, undefined>
   ) => {
@@ -325,7 +417,8 @@ export const createTimeVizChart = () => {
       .call(renderYAxis)
       .call(renderYGrid)
       .call(renderYAxisLabel)
-      .call(renderSeries);
+      .call(renderSeries)
+      .call(renderLegend);
 
     // Cursor interaction (only if not static)
     if (isStatic) return;

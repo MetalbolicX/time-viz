@@ -95,6 +95,7 @@ export class TimeViz extends LitElement {
     .grid {
       stroke: #e0e0e0;
       stroke-width: 1;
+      stroke-dasharray: 2, 2;
     }
 
     .grid path {
@@ -122,11 +123,14 @@ export class TimeViz extends LitElement {
     }
 
     .legend {
-      font-size: 12px;
-    }
+      font-size: 0.75em;
 
-    .legend-item {
-      cursor: pointer;
+      .legend-square {
+        width: 1.5em;
+        height: 1.5em;
+        display: inline-block;
+        margin-right: 0.5rem;
+      }
     }
 
     .legend-item.hidden {
