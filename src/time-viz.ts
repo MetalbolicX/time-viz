@@ -92,7 +92,7 @@ export class TimeViz extends LitElement {
       font-size: 0.7em;
     }
 
-    .grid line {
+    .grid {
       stroke: #e0e0e0;
       stroke-width: 1;
     }
