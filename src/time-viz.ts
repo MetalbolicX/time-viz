@@ -110,7 +110,7 @@ export class TimeViz extends LitElement {
       stroke: #666;
       stroke-width: 1;
       stroke-dasharray: 3, 3;
-      opacity: 0;
+      opacity: 1;
       pointer-events: none;
     }
 

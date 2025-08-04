@@ -129,7 +129,7 @@ export const createTimeVizChart = () => {
       .attr("x1", xScale(xMin))
       .attr("y1", (d) => yScale(d))
       .attr("x2", xScale(xMax))
-      .attr("y2", (d) => yScale(d))
+      .attr("y2", (d) => yScale(d));
   };
 
   /**
@@ -186,6 +186,29 @@ export const createTimeVizChart = () => {
         (exit) => exit.remove()
       );
   };
+
+  const renderCursor = (
+    selection: Selection<SVGElement, unknown, null, undefined>,
+    datum: ChartDataRow
+  ): void => {
+    if (isStatic) return;
+
+    const cursorGroup = selection
+      .selectAll("g.cursor")
+      .data([null])
+      .join("g")
+      .attr("class", "cursor");
+
+    cursorGroup
+      .selectAll(".cursor-line")
+      .data([datum])
+      .join("line")
+      .attr("class", "cursor-line")
+      .attr("x1", xScale(xSerie(datum)))
+      .attr("y1", margin.top)
+      .attr("x2", xScale(xSerie(datum)))
+      .attr("y2", innerHeight + margin.top);
+  }
 
   const chart = (
     selection: Selection<SVGElement, unknown, null, undefined>
@@ -254,22 +277,7 @@ export const createTimeVizChart = () => {
           : closest;
       }, firstRow);
 
-      const cursorGroup = selection
-        .selectAll("g.cursor")
-        .data([null])
-        .join("g")
-        .attr("class", "cursor");
-
-      cursorGroup
-        // .selectAll<SVGLineElement, ChartDataRow>(".cursor-line")
-        .selectAll(".cursor-line")
-        .data([null])
-        .join("line")
-        .attr("class", "cursor-line")
-        .attr("x1", xScale(xSerie(closestDatum)))
-        .attr("y1", yMinRange)
-        .attr("x2", xScale(xSerie(closestDatum)))
-        .attr("y2", yMaxRange);
+      selection.call(renderCursor, closestDatum);
     });
     // Legend and other features can be added similarly
   };
