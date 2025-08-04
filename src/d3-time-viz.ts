@@ -187,9 +187,14 @@ export const createTimeVizChart = () => {
       );
   };
 
+  /**
+   * Renders the cursor on the chart.
+   * The cursor is a vertical line and points that follow the mouse position.
+   * It highlights the closest data point to the mouse position.
+   */
   const renderCursor = (
     selection: Selection<SVGElement, unknown, null, undefined>,
-    datum: ChartDataRow
+    closestRow: ChartDataRow
   ): void => {
     if (isStatic) return;
 
@@ -201,13 +206,23 @@ export const createTimeVizChart = () => {
 
     cursorGroup
       .selectAll(".cursor-line")
-      .data([datum])
+      .data([closestRow])
       .join("line")
       .attr("class", "cursor-line")
-      .attr("x1", xScale(xSerie(datum)))
+      .attr("x1", xScale(xSerie(closestRow)))
       .attr("y1", margin.top)
-      .attr("x2", xScale(xSerie(datum)))
+      .attr("x2", xScale(xSerie(closestRow)))
       .attr("y2", innerHeight + margin.top);
+
+    cursorGroup
+      .selectAll(".cursor-point")
+      .data(series)
+      .join("circle")
+      .attr("class", "cursor-point")
+      .attr("cx", xScale(xSerie(closestRow)))
+      .attr("cy", ({ accessor }) => yScale(accessor(closestRow)))
+      .attr("r", 4)
+      .style("stroke", ({ color, label }) => color || colorScale(label));
   }
 
   const chart = (
@@ -279,7 +294,6 @@ export const createTimeVizChart = () => {
 
       selection.call(renderCursor, closestDatum);
     });
-    // Legend and other features can be added similarly
   };
 
   chart.config = (configuration: TimeVizConfig) => (

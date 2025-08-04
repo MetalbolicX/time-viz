@@ -117,7 +117,7 @@ export class TimeViz extends LitElement {
     .cursor-point {
       fill: white;
       stroke-width: 2;
-      opacity: 0;
+      opacity: 1;
       pointer-events: none;
     }
 
