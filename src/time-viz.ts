@@ -119,7 +119,7 @@ export class TimeViz extends LitElement {
       fill: white;
       stroke-width: 2;
       opacity: 1;
-      pointer-events: none;
+      // pointer-events: none;
     }
 
     .legend {

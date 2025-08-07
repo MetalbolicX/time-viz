@@ -24,6 +24,7 @@ import type { TipVizTooltip } from "tipviz";
  * @returns {Function} A function that can be called with a D3 selection to render the chart.
  */
 export const createTimeVizChart = () => {
+  let cachedTooltip: TipVizTooltip | null = null;
   let config: TimeVizConfig;
   let series: TimeVizSeriesConfig[];
   let data: ChartDataRow[];
@@ -240,12 +241,26 @@ export const createTimeVizChart = () => {
     closestRow: ChartDataRow
   ): void => {
     if (isStatic) return;
-
     const cursorGroup = selection
       .selectAll("g.cursor")
       .data([null])
       .join("g")
       .attr("class", "cursor");
+
+    cursorGroup
+      .selectAll(".cursor-point")
+      .data(series.map(({ accessor, label, color }) => ({
+        label,
+        color,
+        x: xSerie(closestRow),
+        y: accessor(closestRow),
+      })))
+      .join("circle")
+      .attr("class", "cursor-point")
+      .attr("cx", ({ x }) => xScale(x))
+      .attr("cy", ({ y }) => yScale(y))
+      .attr("r", 4)
+      .style("stroke", ({ color, label }) => color || colorScale(label));
 
     cursorGroup
       .selectAll(".cursor-line")
@@ -256,16 +271,6 @@ export const createTimeVizChart = () => {
       .attr("y1", margin.top)
       .attr("x2", xScale(xSerie(closestRow)))
       .attr("y2", innerHeight + margin.top);
-
-    cursorGroup
-      .selectAll(".cursor-point")
-      .data(series)
-      .join("circle")
-      .attr("class", "cursor-point")
-      .attr("cx", xScale(xSerie(closestRow)))
-      .attr("cy", ({ accessor }) => yScale(accessor(closestRow)))
-      .attr("r", 4)
-      .style("stroke", ({ color, label }) => color || colorScale(label));
   };
 
   /**
@@ -342,24 +347,44 @@ export const createTimeVizChart = () => {
       .attr("class", "legend-item")
       .attr("data-label", ({ label }) => label)
       .attr("transform", (_, i) => `translate(0, ${20 * i})`)
-      .call(group => {
+      .call((group) => {
         group
           .selectAll("rect")
-          .data(d => [d])
+          .data((d) => [d])
           .join("rect")
           .attr("class", "legend-square")
           .style("fill", ({ color, label }) => color || colorScale(label));
 
         group
           .selectAll("text")
-          .data(d => [d])
+          .data((d) => [d])
           .join("text")
           .attr("class", "legend-label")
           .attr("x", 20)
           .attr("y", 14)
           .text(({ label }) => label);
       });
-  }
+  };
+
+  const createTooltip = (): TipVizTooltip => {
+    if (!cachedTooltip) {
+      const tooltip = document.createElement(
+        "tip-viz-tooltip"
+      ) as TipVizTooltip;
+      tooltip.setAttribute("transition-time", "200");
+      tooltip.classList.add("d3-time-viz-tooltip");
+      document.body.appendChild(tooltip);
+      cachedTooltip = tooltip;
+    }
+    return cachedTooltip;
+  };
+
+  const removeTooltip = (): void => {
+    if (cachedTooltip && cachedTooltip.parentNode) {
+      cachedTooltip.parentNode.removeChild(cachedTooltip);
+      cachedTooltip = null;
+    }
+  };
 
   /**
    * The main chart function that renders the time visualization.
@@ -420,30 +445,47 @@ export const createTimeVizChart = () => {
 
     // Cursor interaction (only if not static)
     if (isStatic) return;
-    selection.on("mousemove", (event) => {
-      const [mouseX, mouseY] = d3.pointer(event);
-      const [xMinRange, xMaxRange] = xScale.range();
-      const [yMaxRange, yMinRange] = yScale.range();
-      // Check if mouse is within the chart area
-      const isWithinXAxis = mouseX >= xMinRange && mouseX <= xMaxRange;
-      const isWithinYAxis = mouseY >= yMinRange && mouseY <= yMaxRange;
-      if (!(isWithinXAxis && isWithinYAxis)) {
-        selection.selectAll(".cursor").remove();
-        return;
-      }
-      const [firstRow] = data;
-      if (!firstRow) return;
-      const closestDatum = data.reduce((closest, d) => {
-        const xValue = xSerie(d);
-        const closestXValue = xSerie(closest);
-        return Math.abs(xScale(xValue) - mouseX) <
-          Math.abs(xScale(closestXValue) - mouseX)
-          ? d
-          : closest;
-      }, firstRow);
+    selection
+      .on("mousemove", (event) => {
+        const [mouseX, mouseY] = d3.pointer(event);
+        const [xMinRange, xMaxRange] = xScale.range();
+        const [yMaxRange, yMinRange] = yScale.range();
+        // Check if mouse is within the chart area
+        const isWithinXAxis = mouseX >= xMinRange && mouseX <= xMaxRange;
+        const isWithinYAxis = mouseY >= yMinRange && mouseY <= yMaxRange;
+        if (!(isWithinXAxis && isWithinYAxis)) {
+          selection.selectAll(".cursor").remove();
+          removeTooltip();
+          return;
+        }
+        // Only create the tooltip once, when needed
+        const [firstRow] = data;
+        if (!firstRow) return;
+        const closestDatum = data.reduce((closest, d) => {
+          const xValue = xSerie(d);
+          const closestXValue = xSerie(closest);
+          return Math.abs(xScale(xValue) - mouseX) <
+            Math.abs(xScale(closestXValue) - mouseX)
+            ? d
+            : closest;
+        }, firstRow);
 
-      selection.call(renderCursor, closestDatum);
-    });
+        createTooltip();
+        selection.call(renderCursor, closestDatum);
+      })
+      .on("mouseover", ({ target }) => {
+        if (target.classList.contains("cursor-point")) {
+          const datum = d3.select(target).datum();
+          cachedTooltip?.setHtml((d) => /*html*/`
+            <ul>
+              <li>${d.x}</li>
+              <li>${d.y}</li>
+            </ul>
+          `.trim());
+
+          cachedTooltip?.show(datum as ChartDataRow, target);
+        }
+      });
   };
 
   chart.xSerie = (accessor: (d: ChartDataRow) => Date | number) => (
