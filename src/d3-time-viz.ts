@@ -7,7 +7,7 @@ import type {
   MarginConfig,
 } from "./types";
 
-import "tipviz";
+// import "tipviz";
 import type { TipVizTooltip } from "tipviz";
 
 /**
@@ -24,7 +24,8 @@ import type { TipVizTooltip } from "tipviz";
  * @returns {Function} A function that can be called with a D3 selection to render the chart.
  */
 export const createTimeVizChart = () => {
-  let cachedTooltip: TipVizTooltip | null = null;
+  // let cachedTooltip: TipVizTooltip | null = null;
+  let tooltip: TipVizTooltip;
   let config: TimeVizConfig;
   let series: TimeVizSeriesConfig[];
   let data: ChartDataRow[];
@@ -368,25 +369,25 @@ export const createTimeVizChart = () => {
       });
   };
 
-  const createTooltip = (): TipVizTooltip => {
-    if (!cachedTooltip) {
-      const tooltip = document.createElement(
-        "tip-viz-tooltip"
-      ) as TipVizTooltip;
-      tooltip.setAttribute("transition-time", "200");
-      tooltip.classList.add("d3-time-viz-tooltip");
-      document.body.appendChild(tooltip);
-      cachedTooltip = tooltip;
-    }
-    return cachedTooltip;
-  };
+  // const createTooltip = (): TipVizTooltip => {
+  //   if (!cachedTooltip) {
+  //     const tooltip = document.createElement(
+  //       "tip-viz-tooltip"
+  //     ) as TipVizTooltip;
+  //     tooltip.setAttribute("transition-time", "200");
+  //     tooltip.classList.add("d3-time-viz-tooltip");
+  //     document.body.appendChild(tooltip);
+  //     cachedTooltip = tooltip;
+  //   }
+  //   return cachedTooltip;
+  // };
 
-  const removeTooltip = (): void => {
-    if (cachedTooltip && cachedTooltip.parentNode) {
-      cachedTooltip.parentNode.removeChild(cachedTooltip);
-      cachedTooltip = null;
-    }
-  };
+  // const removeTooltip = (): void => {
+  //   if (cachedTooltip && cachedTooltip.parentNode) {
+  //     cachedTooltip.parentNode.removeChild(cachedTooltip);
+  //     cachedTooltip = null;
+  //   }
+  // };
 
   /**
    * The main chart function that renders the time visualization.
@@ -457,7 +458,6 @@ export const createTimeVizChart = () => {
         const isWithinYAxis = mouseY >= yMinRange && mouseY <= yMaxRange;
         if (!(isWithinXAxis && isWithinYAxis)) {
           selection.selectAll(".cursor").remove();
-          removeTooltip();
           return;
         }
         // Only create the tooltip once, when needed
@@ -471,22 +471,38 @@ export const createTimeVizChart = () => {
         const clampedIdx = Math.max(0, Math.min(idx, data.length - 1));
         const closestDatum = data.at(clampedIdx);
 
-        createTooltip();
+        // createTooltip();
         selection.call(renderCursor, closestDatum);
       })
       .on("pointerover", ({ target }) => {
         if (target.classList.contains("cursor-point")) {
           const datum = d3.select(target).datum();
-          cachedTooltip?.setHtml((d) =>
+          // cachedTooltip?.setHtml((d) =>
+          //   /*html*/ `
+          //   <ul>
+          //     <li>${d.x}</li>
+          //     <li>${d.y}</li>
+          //   </ul>
+          // `.trim()
+          // );
+
+          // cachedTooltip?.show(datum as ChartDataRow, target);
+
+          tooltip.setHtml(({ x, y }) =>
             /*html*/ `
             <ul>
-              <li>${d.x}</li>
-              <li>${d.y}</li>
+              <li>${x}</li>
+              <li>${y}</li>
             </ul>
           `.trim()
           );
-
-          cachedTooltip?.show(datum as ChartDataRow, target);
+          // tooltip.setAttribute("hidden", "false");
+          tooltip.show(datum as ChartDataRow, target);
+        }
+      })
+      .on("pointerout", ({ target }) => {
+        if (target.classList.contains("cursor-point")) {
+          tooltip.hide();
         }
       });
   };
@@ -514,6 +530,9 @@ export const createTimeVizChart = () => {
   chart.formatYAxis = (format: string) => ((formatYAxis = format), chart);
   chart.yAxisLabel = (label: string) => ((yAxisLabel = label), chart);
   chart.xAxisLabel = (label: string) => ((xAxisLabel = label), chart);
+  chart.tooltip = (tooltipInstance: TipVizTooltip) => (
+    (tooltip = tooltipInstance), chart
+  );
 
   return chart;
 };

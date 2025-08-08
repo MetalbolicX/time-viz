@@ -1,5 +1,5 @@
 import { LitElement, html, css } from "lit";
-import { customElement, property, state } from "lit/decorators.js";
+import { customElement, property, query, state } from "lit/decorators.js";
 import { createRef, ref } from "lit/directives/ref.js";
 import { select, scaleOrdinal, schemeCategory10 } from "d3";
 import type {
@@ -9,6 +9,8 @@ import type {
   MarginConfig,
 } from "./types";
 import { createTimeVizChart } from "./d3-time-viz";
+import "tipviz";
+import { TipVizTooltip } from "tipviz";
 
 @customElement("time-viz")
 export class TimeViz extends LitElement {
@@ -184,6 +186,8 @@ export class TimeViz extends LitElement {
 
   #svgRef = createRef<SVGElement>();
   #colorScale = scaleOrdinal(schemeCategory10);
+  @query("#d3-tooltip")
+  private declare _tooltip: TipVizTooltip;
 
   constructor() {
     super();
@@ -293,6 +297,7 @@ export class TimeViz extends LitElement {
       .margin(this.margin)
       .series(this.filteredSeries)
       .transitionTime(this.transitionTime)
+      .tooltip(this._tooltip)
       .xTicks(this.xTicks)
       .xAxisLabel(this.xAxisLabel)
       .xSerie(this._config.xSerie.accessor)
@@ -542,6 +547,7 @@ export class TimeViz extends LitElement {
             xmlns:xlink="http://www.w3.org/1999/xlink"
           ></svg>
         </figure>
+        <tip-viz-tooltip id="d3-tooltip" transition-time="250"></tip-viz-tooltip>
       </section>
     `;
   }
