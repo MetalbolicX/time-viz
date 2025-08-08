@@ -246,7 +246,8 @@ export const createTimeVizChart = () => {
       .selectAll("g.cursor")
       .data([null])
       .join("g")
-      .attr("class", "cursor");
+      .attr("class", "cursor")
+      .style("visibility", "visible");
 
     cursorGroup
       .selectAll(".cursor-point")
@@ -457,7 +458,7 @@ export const createTimeVizChart = () => {
         const isWithinXAxis = mouseX >= xMinRange && mouseX <= xMaxRange;
         const isWithinYAxis = mouseY >= yMinRange && mouseY <= yMaxRange;
         if (!(isWithinXAxis && isWithinYAxis)) {
-          selection.selectAll(".cursor").remove();
+          selection.select(".cursor").style("visibility", "hidden");
           return;
         }
         // Only create the tooltip once, when needed
@@ -472,7 +473,8 @@ export const createTimeVizChart = () => {
         const closestDatum = data.at(clampedIdx);
 
         // createTooltip();
-        selection.call(renderCursor, closestDatum);
+        // selection.call(renderCursor, closestDatum);
+        if (closestDatum) selection.call(renderCursor, closestDatum);
       })
       .on("pointerover", ({ target }) => {
         if (target.classList.contains("cursor-point")) {
