@@ -471,8 +471,6 @@ export const createTimeVizChart = () => {
         const clampedIdx = Math.max(0, Math.min(idx, data.length - 1));
         const closestDatum = data.at(clampedIdx);
 
-        // createTooltip();
-        // selection.call(renderCursor, closestDatum);
         if (closestDatum) selection.call(renderCursor, closestDatum);
       })
       .on("pointerover", ({ target }) => {
