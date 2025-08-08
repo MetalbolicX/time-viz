@@ -246,8 +246,7 @@ export const createTimeVizChart = () => {
       .selectAll("g.cursor")
       .data([null])
       .join("g")
-      .attr("class", "cursor")
-      .style("visibility", "visible");
+      .attr("class", "cursor");
 
     cursorGroup
       .selectAll(".cursor-point")
@@ -458,7 +457,7 @@ export const createTimeVizChart = () => {
         const isWithinXAxis = mouseX >= xMinRange && mouseX <= xMaxRange;
         const isWithinYAxis = mouseY >= yMinRange && mouseY <= yMaxRange;
         if (!(isWithinXAxis && isWithinYAxis)) {
-          selection.select(".cursor").style("visibility", "hidden");
+          selection.select(".cursor").remove();
           return;
         }
         // Only create the tooltip once, when needed
