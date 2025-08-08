@@ -100,29 +100,3 @@ function processData(data: DataType): ResultType {
 </example>
 
 </clean_code>
-
-# Project Overview
-
-The `time-viz` project is a web component designed to visualize time series data (line charts). It will be built in:
-
-- TypeScript.
-- D3.js version 7.
-- Web Components standards.
-- Lit library version 3.
-
-## Requirements
-
-- Render multiple series.
-- The domain for time will be the x values.
-- The only x axis will be at bottom and y axis at left.
-- Render the labels for the x and y axis and the legend for multiple series.
-- Render the  grid of x and y.
-- Render the chart title.
-- Use the cursor to follow the mouse movement and render the line and point for interaction.
-- Drop down list to filter the data by series.
-- Use the `d3.scaleTime` for the x axis and `d3.scaleLinear` for the y axis.
-- Be responsive using the svg `viewBox` attribute and `preserveAspectRatio`.
-- Data should be passed as an array of objects using a setter, not by attribute.
-- Apply semantic HTML.
-- Use data visualization best practices in CSS and styles.
-- Add a button to download the chart in SVG format.
