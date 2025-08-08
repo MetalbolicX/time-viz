@@ -39,3 +39,10 @@ chart.config = {
     },
   ],
 };
+
+chart.tooltipContent(({x, y}: any) => /*html*/`
+  <ul>
+    <li>${x.toLocaleDateString()}</li>
+    <li>${y}</li>
+  </ul>
+`.trim());

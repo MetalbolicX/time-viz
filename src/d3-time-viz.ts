@@ -476,26 +476,6 @@ export const createTimeVizChart = () => {
       .on("pointerover", ({ target }) => {
         if (target.classList.contains("cursor-point")) {
           const datum = d3.select(target).datum();
-          // cachedTooltip?.setHtml((d) =>
-          //   /*html*/ `
-          //   <ul>
-          //     <li>${d.x}</li>
-          //     <li>${d.y}</li>
-          //   </ul>
-          // `.trim()
-          // );
-
-          // cachedTooltip?.show(datum as ChartDataRow, target);
-
-          tooltip.setHtml(({ x, y }) =>
-            /*html*/ `
-            <ul>
-              <li>${x}</li>
-              <li>${y}</li>
-            </ul>
-          `.trim()
-          );
-          // tooltip.setAttribute("hidden", "false");
           tooltip.show(datum as ChartDataRow, target);
         }
       })

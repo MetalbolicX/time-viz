@@ -189,6 +189,12 @@ export class TimeViz extends LitElement {
   @query("#d3-tooltip")
   private declare _tooltip: TipVizTooltip;
 
+  /**
+   * Sets the HTML template callback for the tipviz tooltip.
+   * The callback receives the datum and target element.
+   */
+  private _tooltipTemplate: ((datum: any, target?: Element) => string) | null = null;
+
   constructor() {
     super();
     this.isStatic = false;
@@ -237,8 +243,24 @@ export class TimeViz extends LitElement {
     );
   }
 
+  /**
+   * Sets the content of the tooltip.
+   * @param content - A function that returns the HTML content for the tooltip.
+   * @example
+   * ```ts
+   * tooltipContent((d) => `<strong>${d.x}</strong>: ${d.y}`);
+   * ```
+   */
   public tooltipContent(content: (...args: any[]) => string): void {
-    // Implementation for setting the tooltip content
+    this._tooltip.setHtml(content);
+  }
+
+  /**
+   * Sets the HTML template callback for the tipviz tooltip.
+   * The callback receives the datum and target element.
+   */
+  public setTooltipTemplate(template: (datum: any, target?: Element) => string): void {
+    this._tooltipTemplate = template;
   }
 
   protected updated(
