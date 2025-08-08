@@ -249,12 +249,14 @@ export const createTimeVizChart = () => {
 
     cursorGroup
       .selectAll(".cursor-point")
-      .data(series.map(({ accessor, label, color }) => ({
-        label,
-        color,
-        x: xSerie(closestRow),
-        y: accessor(closestRow),
-      })))
+      .data(
+        series.map(({ accessor, label, color }) => ({
+          label,
+          color,
+          x: xSerie(closestRow),
+          y: accessor(closestRow),
+        }))
+      )
       .join("circle")
       .attr("class", "cursor-point")
       .attr("cx", ({ x }) => xScale(x))
@@ -446,7 +448,7 @@ export const createTimeVizChart = () => {
     // Cursor interaction (only if not static)
     if (isStatic) return;
     selection
-      .on("mousemove", (event) => {
+      .on("pointermove", (event) => {
         const [mouseX, mouseY] = d3.pointer(event);
         const [xMinRange, xMaxRange] = xScale.range();
         const [yMaxRange, yMinRange] = yScale.range();
@@ -459,29 +461,30 @@ export const createTimeVizChart = () => {
           return;
         }
         // Only create the tooltip once, when needed
-        const [firstRow] = data;
-        if (!firstRow) return;
-        const closestDatum = data.reduce((closest, d) => {
-          const xValue = xSerie(d);
-          const closestXValue = xSerie(closest);
-          return Math.abs(xScale(xValue) - mouseX) <
-            Math.abs(xScale(closestXValue) - mouseX)
-            ? d
-            : closest;
-        }, firstRow);
+        if (!data.length) return;
+        // Use d3.bisector for O(log n) lookup
+        const xValues = data.map(xSerie);
+        const mouseDate = xScale.invert(mouseX);
+        const bisect = d3.bisector((d: Date | number) => d).center;
+        const idx = bisect(xValues, mouseDate);
+        // Clamp index to valid range
+        const clampedIdx = Math.max(0, Math.min(idx, data.length - 1));
+        const closestDatum = data.at(clampedIdx);
 
         createTooltip();
         selection.call(renderCursor, closestDatum);
       })
-      .on("mouseover", ({ target }) => {
+      .on("pointerover", ({ target }) => {
         if (target.classList.contains("cursor-point")) {
           const datum = d3.select(target).datum();
-          cachedTooltip?.setHtml((d) => /*html*/`
+          cachedTooltip?.setHtml((d) =>
+            /*html*/ `
             <ul>
               <li>${d.x}</li>
               <li>${d.y}</li>
             </ul>
-          `.trim());
+          `.trim()
+          );
 
           cachedTooltip?.show(datum as ChartDataRow, target);
         }
