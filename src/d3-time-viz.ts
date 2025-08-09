@@ -386,6 +386,7 @@ export const createTimeVizChart = () => {
    * @param selection - The D3 selection of the SVG element
    * @returns {void}
    */
+  let lastCursorIdx: number | null = null;
   const handlePointerMoveCursor = (
     event: PointerEvent,
     selection: Selection<SVGElement, unknown, null, undefined>
@@ -398,9 +399,9 @@ export const createTimeVizChart = () => {
     const isWithinYAxis = mouseY >= yMinRange && mouseY <= yMaxRange;
     if (!(isWithinXAxis && isWithinYAxis)) {
       selection.select(".cursor").classed("hidden", true);
+      lastCursorIdx = null;
       return;
     }
-    // Only create the tooltip once, when needed
     if (!data.length) return;
     // Use d3.bisector for O(log n) lookup
     const xValues = data.map(xSerie);
@@ -409,8 +410,9 @@ export const createTimeVizChart = () => {
     const idx = bisect(xValues, mouseDate);
     // Clamp index to valid range
     const clampedIdx = Math.max(0, Math.min(idx, data.length - 1));
+    if (lastCursorIdx === clampedIdx) return; // Only update if changed
+    lastCursorIdx = clampedIdx;
     const closestDatum = data.at(clampedIdx);
-
     if (closestDatum) selection.call(renderCursor, closestDatum);
   };
 
