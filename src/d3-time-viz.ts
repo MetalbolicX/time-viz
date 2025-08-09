@@ -421,10 +421,22 @@ export const createTimeVizChart = () => {
    * @param event.target - The pointer event target
    * @returns {void}
    */
+  let lastTooltipDatum: any = null;
+  let hideTooltipTimeout: any = null;
+  const TOOLTIP_HIDE_DELAY = 40; // ms
+
   const handleClosestPointOver = ({ target }: PointerEvent) => {
     if (target instanceof SVGElement && target.classList.contains("cursor-point")) {
       const datum = d3.select(target).datum();
-      tooltip.show(datum as ChartDataRow, target);
+      if (hideTooltipTimeout) {
+        clearTimeout(hideTooltipTimeout);
+        hideTooltipTimeout = null;
+      }
+      // Only show if not already showing for this datum
+      if (lastTooltipDatum !== datum) {
+        tooltip.show(datum as ChartDataRow, target);
+        lastTooltipDatum = datum;
+      }
     }
   };
 
@@ -435,7 +447,12 @@ export const createTimeVizChart = () => {
    */
   const handleClosestPointOut = ({ target }: PointerEvent) => {
     if (target instanceof SVGElement && target.classList.contains("cursor-point")) {
-      tooltip.hide();
+      // Debounce hide to prevent flicker on rapid pointer transitions
+      if (hideTooltipTimeout) clearTimeout(hideTooltipTimeout);
+      hideTooltipTimeout = setTimeout(() => {
+        tooltip.hide();
+        lastTooltipDatum = null;
+      }, TOOLTIP_HIDE_DELAY);
     }
   };
 
