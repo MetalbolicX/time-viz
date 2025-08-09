@@ -109,19 +109,20 @@ export class TimeViz extends LitElement {
       stroke-width: 2;
     }
 
+    .cursor.hidden {
+      visibility: hidden;
+    }
+
     .cursor-line {
       stroke: #666;
       stroke-width: 1;
       stroke-dasharray: 3, 3;
-      opacity: 1;
       pointer-events: none;
     }
 
     .cursor-point {
       fill: white;
       stroke-width: 2;
-      opacity: 1;
-      // pointer-events: none;
     }
 
     .legend {

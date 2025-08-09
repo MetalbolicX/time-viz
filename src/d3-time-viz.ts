@@ -457,7 +457,7 @@ export const createTimeVizChart = () => {
         const isWithinXAxis = mouseX >= xMinRange && mouseX <= xMaxRange;
         const isWithinYAxis = mouseY >= yMinRange && mouseY <= yMaxRange;
         if (!(isWithinXAxis && isWithinYAxis)) {
-          selection.select(".cursor").remove();
+          selection.select(".cursor").classed("hidden", true);
           return;
         }
         // Only create the tooltip once, when needed
