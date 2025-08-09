@@ -6,8 +6,6 @@ import type {
   ChartDataRow,
   MarginConfig,
 } from "./types";
-
-// import "tipviz";
 import type { TipVizTooltip } from "tipviz";
 
 /**
@@ -452,21 +450,51 @@ export const createTimeVizChart = () => {
    * chart(svg);
    * ```
    */
+
   const chart = (
     selection: Selection<SVGElement, unknown, null, undefined>
   ) => {
-    if (!config || !series?.length || !data?.length) return;
+    // User-friendly error handling for required properties
+    if (!config) {
+      console.warn("[d3-time-viz] Chart config is missing. Use .config() to set it before rendering.");
+      return;
+    }
+    if (!series || !Array.isArray(series) || !series.length) {
+      console.warn("[d3-time-viz] Chart series is missing or empty. Use .series() to set it before rendering.");
+      return;
+    }
+    if (!data || !Array.isArray(data) || !data.length) {
+      console.warn("[d3-time-viz] Chart data is missing or empty. Use .data() to set it before rendering.");
+      return;
+    }
+    if (typeof xSerie !== 'function') {
+      console.warn("[d3-time-viz] xSerie accessor is missing. Use .xSerie() to set it before rendering.");
+      return;
+    }
+    if (!colorScale || typeof colorScale !== 'function' || typeof colorScale.domain !== 'function' || typeof colorScale.range !== 'function') {
+      console.warn("[d3-time-viz] colorScale is missing or invalid. Use .colorScale() to set a valid D3 scaleOrdinal before rendering.");
+      return;
+    }
 
     const { width, height } = getSize(selection);
-    if (!(width && height)) return;
+    if (!(width && height)) {
+      console.warn("[d3-time-viz] SVG element has invalid width or height.");
+      return;
+    }
     selection.attr("viewBox", `0 0 ${width} ${height}`);
     innerWidth = width - (margin.left + margin.right);
     innerHeight = height - (margin.top + margin.bottom);
-    if (innerWidth <= 0 && innerHeight <= 0) return;
+    if (innerWidth <= 0 && innerHeight <= 0) {
+      console.warn("[d3-time-viz] Computed innerWidth and innerHeight are not positive.");
+      return;
+    }
 
     const xVals = data.map(xSerie);
     const [xMin, xMax] = d3.extent(xVals);
-    if (!(xMin instanceof Date && xMax instanceof Date)) return;
+    if (!(xMin instanceof Date && xMax instanceof Date)) {
+      console.warn("[d3-time-viz] xSerie must return Date objects for all data points.");
+      return;
+    }
     xScale = d3
       .scaleTime()
       .domain([xMin, xMax])
@@ -479,7 +507,10 @@ export const createTimeVizChart = () => {
     );
 
     const [yMin, yMax] = d3.extent(yVals);
-    if (!(typeof yMin === "number" && typeof yMax === "number")) return;
+    if (!(typeof yMin === "number" && typeof yMax === "number")) {
+      console.warn("[d3-time-viz] Series accessors must return numbers for all data points.");
+      return;
+    }
     yScale = d3
       .scaleLinear()
       .domain([yMin, yMax])
@@ -498,8 +529,25 @@ export const createTimeVizChart = () => {
 
     // Cursor interaction (only if not static)
     if (isStatic) return;
+    // Remove previous event listeners before adding new ones
     selection
-      .on("pointermove", (event) => handlePointerMoveCursor(event, selection))
+      .on("pointermove", null)
+      .on("pointerover", null)
+      .on("pointerout", null);
+
+    // Throttle pointermove handler for performance
+    let lastMove = 0;
+    const throttleMs = 16; // ~60fps
+    const throttledPointerMove = (event: PointerEvent) => {
+      const now = Date.now();
+      if (now - lastMove > throttleMs) {
+        handlePointerMoveCursor(event, selection);
+        lastMove = now;
+      }
+    };
+
+    selection
+      .on("pointermove", throttledPointerMove)
       .on("pointerover", handleClosestPointOver)
       .on("pointerout", handleClosestPointOut);
   };
