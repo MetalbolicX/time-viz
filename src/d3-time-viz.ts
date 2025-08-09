@@ -369,25 +369,62 @@ export const createTimeVizChart = () => {
       });
   };
 
-  // const createTooltip = (): TipVizTooltip => {
-  //   if (!cachedTooltip) {
-  //     const tooltip = document.createElement(
-  //       "tip-viz-tooltip"
-  //     ) as TipVizTooltip;
-  //     tooltip.setAttribute("transition-time", "200");
-  //     tooltip.classList.add("d3-time-viz-tooltip");
-  //     document.body.appendChild(tooltip);
-  //     cachedTooltip = tooltip;
-  //   }
-  //   return cachedTooltip;
-  // };
+  /**
+   * Handle the cursor line and the closest point when the user moves the cursor.
+   * @param event - The pointer event
+   * @param selection - The D3 selection of the SVG element
+   * @returns {void}
+   */
+  const handlePointerMoveCursor = (
+    event: PointerEvent,
+    selection: Selection<SVGElement, unknown, null, undefined>
+  ) => {
+    const [mouseX, mouseY] = d3.pointer(event);
+    const [xMinRange, xMaxRange] = xScale.range();
+    const [yMaxRange, yMinRange] = yScale.range();
+    // Check if mouse is within the chart area
+    const isWithinXAxis = mouseX >= xMinRange && mouseX <= xMaxRange;
+    const isWithinYAxis = mouseY >= yMinRange && mouseY <= yMaxRange;
+    if (!(isWithinXAxis && isWithinYAxis)) {
+      selection.select(".cursor").classed("hidden", true);
+      return;
+    }
+    // Only create the tooltip once, when needed
+    if (!data.length) return;
+    // Use d3.bisector for O(log n) lookup
+    const xValues = data.map(xSerie);
+    const mouseDate = xScale.invert(mouseX);
+    const bisect = d3.bisector((d: Date | number) => d).center;
+    const idx = bisect(xValues, mouseDate);
+    // Clamp index to valid range
+    const clampedIdx = Math.max(0, Math.min(idx, data.length - 1));
+    const closestDatum = data.at(clampedIdx);
 
-  // const removeTooltip = (): void => {
-  //   if (cachedTooltip && cachedTooltip.parentNode) {
-  //     cachedTooltip.parentNode.removeChild(cachedTooltip);
-  //     cachedTooltip = null;
-  //   }
-  // };
+    if (closestDatum) selection.call(renderCursor, closestDatum);
+  };
+
+  /**
+   * Handle the closest point when the user hovers over a point.
+   * @param event.target - The pointer event target
+   * @returns {void}
+   */
+  const handleClosestPointOver = ({ target }: PointerEvent) => {
+    if (target instanceof SVGElement && target.classList.contains("cursor-point")) {
+      const datum = d3.select(target).datum();
+      tooltip.show(datum as ChartDataRow, target);
+    }
+  };
+
+  /**
+   * Handle the closest point when the user moves the cursor out of a point.
+   * @param event.target - The pointer event target
+   * @returns {void}
+   */
+  const handleClosestPointOut = ({ target }: PointerEvent) => {
+    if (target instanceof SVGElement && target.classList.contains("cursor-point")) {
+      tooltip.hide();
+    }
+  };
 
   /**
    * The main chart function that renders the time visualization.
@@ -449,41 +486,9 @@ export const createTimeVizChart = () => {
     // Cursor interaction (only if not static)
     if (isStatic) return;
     selection
-      .on("pointermove", (event) => {
-        const [mouseX, mouseY] = d3.pointer(event);
-        const [xMinRange, xMaxRange] = xScale.range();
-        const [yMaxRange, yMinRange] = yScale.range();
-        // Check if mouse is within the chart area
-        const isWithinXAxis = mouseX >= xMinRange && mouseX <= xMaxRange;
-        const isWithinYAxis = mouseY >= yMinRange && mouseY <= yMaxRange;
-        if (!(isWithinXAxis && isWithinYAxis)) {
-          selection.select(".cursor").classed("hidden", true);
-          return;
-        }
-        // Only create the tooltip once, when needed
-        if (!data.length) return;
-        // Use d3.bisector for O(log n) lookup
-        const xValues = data.map(xSerie);
-        const mouseDate = xScale.invert(mouseX);
-        const bisect = d3.bisector((d: Date | number) => d).center;
-        const idx = bisect(xValues, mouseDate);
-        // Clamp index to valid range
-        const clampedIdx = Math.max(0, Math.min(idx, data.length - 1));
-        const closestDatum = data.at(clampedIdx);
-
-        if (closestDatum) selection.call(renderCursor, closestDatum);
-      })
-      .on("pointerover", ({ target }) => {
-        if (target.classList.contains("cursor-point")) {
-          const datum = d3.select(target).datum();
-          tooltip.show(datum as ChartDataRow, target);
-        }
-      })
-      .on("pointerout", ({ target }) => {
-        if (target.classList.contains("cursor-point")) {
-          tooltip.hide();
-        }
-      });
+      .on("pointermove", (event) => handlePointerMoveCursor(event, selection))
+      .on("pointerover", handleClosestPointOver)
+      .on("pointerout", handleClosestPointOut);
   };
 
   chart.xSerie = (accessor: (d: ChartDataRow) => Date | number) => (
