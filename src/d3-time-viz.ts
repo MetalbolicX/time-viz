@@ -24,32 +24,45 @@ import type { TipVizTooltip } from "tipviz";
  * @returns {Function} A function that can be called with a D3 selection to render the chart.
  */
 export const createTimeVizChart = () => {
-  // let cachedTooltip: TipVizTooltip | null = null;
+  // Centralized default values
+  const defaultConfig = {
+    transitionTime: 0,
+    xTicks: 5,
+    yTicks: 5,
+    margin: {
+      top: 30,
+      right: 40,
+      bottom: 30,
+      left: 40,
+    } as MarginConfig,
+    formatXAxis: "%Y-%m-%d",
+    formatYAxis: ".2f",
+    yAxisLabel: "",
+    xAxisLabel: "",
+    isCurved: false,
+    isStatic: false,
+  };
+
   let tooltip: TipVizTooltip;
   let config: TimeVizConfig;
   let series: TimeVizSeriesConfig[];
   let data: ChartDataRow[];
   let colorScale: d3.ScaleOrdinal<string, string>;
-  let isCurved: boolean;
-  let isStatic: boolean;
-  let transitionTime: number = 0;
-  let xTicks: number = 5;
-  let yTicks: number = 5;
-  let margin: MarginConfig = {
-    top: 30,
-    right: 40,
-    bottom: 30,
-    left: 40,
-  };
-  let formatXAxis: string = "%Y-%m-%d";
-  let formatYAxis: string = ".2f";
+  let isCurved: boolean = defaultConfig.isCurved;
+  let isStatic: boolean = defaultConfig.isStatic;
+  let transitionTime: number = defaultConfig.transitionTime;
+  let xTicks: number = defaultConfig.xTicks;
+  let yTicks: number = defaultConfig.yTicks;
+  let margin: MarginConfig = { ...defaultConfig.margin };
+  let formatXAxis: string = defaultConfig.formatXAxis;
+  let formatYAxis: string = defaultConfig.formatYAxis;
   let xSerie: (d: ChartDataRow) => Date | number;
   let innerWidth: number = 0;
   let innerHeight: number = 0;
   let xScale: d3.ScaleTime<number, number>;
   let yScale: d3.ScaleLinear<number, number>;
-  let yAxisLabel: string = "";
-  let xAxisLabel: string = "";
+  let yAxisLabel: string = defaultConfig.yAxisLabel;
+  let xAxisLabel: string = defaultConfig.xAxisLabel;
 
   /**
    * Utility function to get the size of the SVG element.
