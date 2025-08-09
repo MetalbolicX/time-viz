@@ -1,7 +1,7 @@
 import { LitElement, html, css } from "lit";
 import { customElement, property, query, state } from "lit/decorators.js";
 import { createRef, ref } from "lit/directives/ref.js";
-import { select, scaleOrdinal, schemeCategory10 } from "d3";
+import { select, scaleOrdinal, schemeCategory10, style } from "d3";
 import type {
   TimeVizConfig,
   TimeVizSeriesConfig,
@@ -248,6 +248,25 @@ export class TimeViz extends LitElement {
    */
   public tooltipContent(content: (...args: any[]) => string): void {
     this._tooltip.setHtml(content);
+  }
+
+  /**
+   * Sets the styles for the tooltip.
+   * @param css - A string containing the CSS styles to apply.
+   * @returns {void}
+   * @example
+   * ```ts
+   * tooltipStyle(`
+   *   .tooltip {
+   *     background-color: black;
+   *     color: white;
+   *   }
+   * `);
+   * ```
+   */
+  public tooltipStyle(css: string): void {
+    if (!css) return;
+    this._tooltip.setStyles(css);
   }
 
   protected updated(
