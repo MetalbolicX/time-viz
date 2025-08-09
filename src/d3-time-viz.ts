@@ -274,7 +274,10 @@ export const createTimeVizChart = () => {
       .attr("cx", ({ x }) => xScale(x))
       .attr("cy", ({ y }) => yScale(y))
       .attr("r", 4)
-      .style("stroke", ({ color, label }) => color || colorScale(label));
+      .style("stroke", ({ color, label }) => color || colorScale(label))
+      .attr("tabindex", 0)
+      .attr("role", "button")
+      .attr("aria-label", ({ label, x, y }) => `Data point for ${label}, x: ${x}, y: ${y}`);
 
     cursorGroup
       .selectAll(".cursor-line")
