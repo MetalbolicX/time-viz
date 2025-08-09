@@ -459,6 +459,56 @@ export const createTimeVizChart = () => {
     }
   };
 
+  const setupChartEventListeners = (selection: Selection<SVGElement, unknown, null, undefined>) => {
+    // Cursor interaction (only if not static)
+    if (isStatic) return;
+    // Remove previous event listeners before adding new ones
+    selection
+      .on("pointermove", null)
+      .on("pointerover", null)
+      .on("pointerout", null);
+
+    // Throttle pointermove handler for performance
+    let lastMove = 0;
+    const throttleMs = 16; // ~60fps
+    const throttledPointerMove = (event: PointerEvent) => {
+      const now = Date.now();
+      if (now - lastMove > throttleMs) {
+        handlePointerMoveCursor(event, selection);
+        lastMove = now;
+      }
+    };
+
+    selection
+      .on("pointermove", throttledPointerMove)
+      .on("pointerover", handleClosestPointOver)
+      .on("pointerout", handleClosestPointOut);
+  };
+
+  const validateSetup = (): boolean => {
+    if (!config) {
+      console.warn("[d3-time-viz] Chart config is missing.");
+      return false;
+    }
+    if (!series || !Array.isArray(series) || !series.length) {
+      console.warn("[d3-time-viz] Chart series is missing or empty.");
+      return false;
+    }
+    if (!data || !Array.isArray(data) || !data.length) {
+      console.warn("[d3-time-viz] Chart data is missing or empty.");
+      return false;
+    }
+    if (typeof xSerie !== 'function') {
+      console.warn("[d3-time-viz] xSerie accessor is missing.");
+      return false;
+    }
+    if (!colorScale || typeof colorScale !== 'function' || typeof colorScale.domain !== 'function' || typeof colorScale.range !== 'function') {
+      console.warn("[d3-time-viz] colorScale is missing or invalid.");
+      return false;
+    }
+    return true;
+  }
+
   /**
    * The main chart function that renders the time visualization.
    * @description
@@ -476,25 +526,8 @@ export const createTimeVizChart = () => {
   const chart = (
     selection: Selection<SVGElement, unknown, null, undefined>
   ) => {
-    // User-friendly error handling for required properties
-    if (!config) {
-      console.warn("[d3-time-viz] Chart config is missing. Use .config() to set it before rendering.");
-      return;
-    }
-    if (!series || !Array.isArray(series) || !series.length) {
-      console.warn("[d3-time-viz] Chart series is missing or empty. Use .series() to set it before rendering.");
-      return;
-    }
-    if (!data || !Array.isArray(data) || !data.length) {
-      console.warn("[d3-time-viz] Chart data is missing or empty. Use .data() to set it before rendering.");
-      return;
-    }
-    if (typeof xSerie !== 'function') {
-      console.warn("[d3-time-viz] xSerie accessor is missing. Use .xSerie() to set it before rendering.");
-      return;
-    }
-    if (!colorScale || typeof colorScale !== 'function' || typeof colorScale.domain !== 'function' || typeof colorScale.range !== 'function') {
-      console.warn("[d3-time-viz] colorScale is missing or invalid. Use .colorScale() to set a valid D3 scaleOrdinal before rendering.");
+    if (!validateSetup()) {
+      console.warn("[d3-time-viz] Chart setup is invalid.");
       return;
     }
 
@@ -503,11 +536,12 @@ export const createTimeVizChart = () => {
       console.warn("[d3-time-viz] SVG element has invalid width or height.");
       return;
     }
+
     selection.attr("viewBox", `0 0 ${width} ${height}`);
     innerWidth = width - (margin.left + margin.right);
     innerHeight = height - (margin.top + margin.bottom);
-    if (innerWidth <= 0 && innerHeight <= 0) {
-      console.warn("[d3-time-viz] Computed innerWidth and innerHeight are not positive.");
+    if (innerWidth <= 0 || innerHeight <= 0) {
+      console.warn("[d3-time-viz] SVG element has non-positive dimensions.");
       return;
     }
 
@@ -549,29 +583,7 @@ export const createTimeVizChart = () => {
       .call(renderSeries)
       .call(renderLegend);
 
-    // Cursor interaction (only if not static)
-    if (isStatic) return;
-    // Remove previous event listeners before adding new ones
-    selection
-      .on("pointermove", null)
-      .on("pointerover", null)
-      .on("pointerout", null);
-
-    // Throttle pointermove handler for performance
-    let lastMove = 0;
-    const throttleMs = 16; // ~60fps
-    const throttledPointerMove = (event: PointerEvent) => {
-      const now = Date.now();
-      if (now - lastMove > throttleMs) {
-        handlePointerMoveCursor(event, selection);
-        lastMove = now;
-      }
-    };
-
-    selection
-      .on("pointermove", throttledPointerMove)
-      .on("pointerover", handleClosestPointOver)
-      .on("pointerout", handleClosestPointOut);
+    setupChartEventListeners(selection);
   };
 
 
@@ -701,105 +713,6 @@ export const createTimeVizChart = () => {
       return chart;
     }
     tooltip = tooltipInstance;
-    return chart;
-  };
-
-  /**
-   * Set multiple chart options at once for improved chainability and clarity.
-   * Accepts a partial config object with any supported builder options.
-   */
-  chart.setOptions = (options: Partial<TimeVizConfig> & {
-    series?: TimeVizSeriesConfig[];
-    data?: ChartDataRow[];
-    colorScale?: ScaleOrdinal<string, string>;
-    isCurved?: boolean;
-    isStatic?: boolean;
-    transitionTime?: number;
-    xTicks?: number;
-    yTicks?: number;
-    margin?: MarginConfig;
-    formatXAxis?: string;
-    formatYAxis?: string;
-    yAxisLabel?: string;
-    xAxisLabel?: string;
-    tooltip?: TipVizTooltip;
-    xSerie?: (d: ChartDataRow) => Date | number;
-  }) => {
-    if (options.series && !Array.isArray(options.series)) {
-      console.warn('series must be an array');
-    } else if (options.series) {
-      series = options.series;
-    }
-    if (options.data && !Array.isArray(options.data)) {
-      console.warn('data must be an array');
-    } else if (options.data) {
-      data = options.data;
-    }
-    if (options.colorScale && (typeof options.colorScale !== 'function' || typeof options.colorScale.domain !== 'function' || typeof options.colorScale.range !== 'function')) {
-      console.warn('colorScale must be a valid D3 scaleOrdinal');
-    } else if (options.colorScale) {
-      colorScale = options.colorScale;
-    }
-    if (typeof options.isCurved !== 'undefined' && typeof options.isCurved !== 'boolean') {
-      console.warn('isCurved must be a boolean');
-    } else if (typeof options.isCurved === 'boolean') {
-      isCurved = options.isCurved;
-    }
-    if (typeof options.isStatic !== 'undefined' && typeof options.isStatic !== 'boolean') {
-      console.warn('isStatic must be a boolean');
-    } else if (typeof options.isStatic === 'boolean') {
-      isStatic = options.isStatic;
-    }
-    if (typeof options.transitionTime !== 'undefined' && (typeof options.transitionTime !== 'number' || options.transitionTime < 0)) {
-      console.warn('transitionTime must be a non-negative number');
-    } else if (typeof options.transitionTime === 'number') {
-      transitionTime = options.transitionTime;
-    }
-    if (typeof options.xTicks !== 'undefined' && (typeof options.xTicks !== 'number' || options.xTicks < 0)) {
-      console.warn('xTicks must be a non-negative number');
-    } else if (typeof options.xTicks === 'number') {
-      xTicks = options.xTicks;
-    }
-    if (typeof options.yTicks !== 'undefined' && (typeof options.yTicks !== 'number' || options.yTicks < 0)) {
-      console.warn('yTicks must be a non-negative number');
-    } else if (typeof options.yTicks === 'number') {
-      yTicks = options.yTicks;
-    }
-    if (options.margin && (typeof options.margin !== 'object' || options.margin == null)) {
-      console.warn('margin must be an object');
-    } else if (options.margin) {
-      margin = { ...margin, ...options.margin };
-    }
-    if (typeof options.formatXAxis !== 'undefined' && typeof options.formatXAxis !== 'string') {
-      console.warn('formatXAxis must be a string');
-    } else if (typeof options.formatXAxis === 'string') {
-      formatXAxis = options.formatXAxis;
-    }
-    if (typeof options.formatYAxis !== 'undefined' && typeof options.formatYAxis !== 'string') {
-      console.warn('formatYAxis must be a string');
-    } else if (typeof options.formatYAxis === 'string') {
-      formatYAxis = options.formatYAxis;
-    }
-    if (typeof options.yAxisLabel !== 'undefined' && typeof options.yAxisLabel !== 'string') {
-      console.warn('yAxisLabel must be a string');
-    } else if (typeof options.yAxisLabel === 'string') {
-      yAxisLabel = options.yAxisLabel;
-    }
-    if (typeof options.xAxisLabel !== 'undefined' && typeof options.xAxisLabel !== 'string') {
-      console.warn('xAxisLabel must be a string');
-    } else if (typeof options.xAxisLabel === 'string') {
-      xAxisLabel = options.xAxisLabel;
-    }
-    if (options.tooltip && (typeof options.tooltip !== 'object' || options.tooltip == null)) {
-      console.warn('tooltip must be a valid TipVizTooltip instance');
-    } else if (options.tooltip) {
-      tooltip = options.tooltip;
-    }
-    if (options.xSerie && typeof options.xSerie !== 'function') {
-      console.warn('xSerie accessor must be a function');
-    } else if (options.xSerie) {
-      xSerie = options.xSerie;
-    }
     return chart;
   };
 
