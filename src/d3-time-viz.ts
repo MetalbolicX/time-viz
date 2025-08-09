@@ -1,7 +1,6 @@
 import * as d3 from "d3";
 import type { Selection, ScaleOrdinal } from "d3";
 import type {
-  TimeVizConfig,
   TimeVizSeriesConfig,
   ChartDataRow,
   MarginConfig,
@@ -42,7 +41,6 @@ export const createTimeVizChart = () => {
   };
 
   let tooltip: TipVizTooltip;
-  let config: TimeVizConfig;
   let series: TimeVizSeriesConfig[];
   let data: ChartDataRow[];
   let colorScale: d3.ScaleOrdinal<string, string>;
@@ -192,7 +190,7 @@ export const createTimeVizChart = () => {
   const renderSeries = (
     selection: Selection<SVGElement, unknown, null, undefined>
   ): void => {
-    if (!config || !series?.length || !data?.length) return;
+    if (!(series?.length && data?.length)) return;
 
     const lineGenerators = series.map(({ accessor }) => {
       const line = d3
@@ -277,7 +275,10 @@ export const createTimeVizChart = () => {
       .style("stroke", ({ color, label }) => color || colorScale(label))
       .attr("tabindex", 0)
       .attr("role", "button")
-      .attr("aria-label", ({ label, x, y }) => `Data point for ${label}, x: ${x}, y: ${y}`);
+      .attr(
+        "aria-label",
+        ({ label, x, y }) => `Data point for ${label}, x: ${x}, y: ${y}`
+      );
 
     cursorGroup
       .selectAll(".cursor-line")
@@ -348,7 +349,7 @@ export const createTimeVizChart = () => {
   const renderLegend = (
     selection: Selection<SVGElement, unknown, null, undefined>
   ): void => {
-    if (!config || !series?.length) return;
+    if (!series?.length) return;
 
     const legendGroup = selection
       .selectAll("g.legend")
@@ -429,7 +430,10 @@ export const createTimeVizChart = () => {
   const TOOLTIP_HIDE_DELAY = 40; // ms
 
   const handleClosestPointOver = ({ target }: PointerEvent) => {
-    if (target instanceof SVGElement && target.classList.contains("cursor-point")) {
+    if (
+      target instanceof SVGElement &&
+      target.classList.contains("cursor-point")
+    ) {
       const datum = d3.select(target).datum();
       if (hideTooltipTimeout) {
         clearTimeout(hideTooltipTimeout);
@@ -449,7 +453,10 @@ export const createTimeVizChart = () => {
    * @returns {void}
    */
   const handleClosestPointOut = ({ target }: PointerEvent) => {
-    if (target instanceof SVGElement && target.classList.contains("cursor-point")) {
+    if (
+      target instanceof SVGElement &&
+      target.classList.contains("cursor-point")
+    ) {
       // Debounce hide to prevent flicker on rapid pointer transitions
       if (hideTooltipTimeout) clearTimeout(hideTooltipTimeout);
       hideTooltipTimeout = setTimeout(() => {
@@ -459,7 +466,9 @@ export const createTimeVizChart = () => {
     }
   };
 
-  const setupChartEventListeners = (selection: Selection<SVGElement, unknown, null, undefined>) => {
+  const setupChartEventListeners = (
+    selection: Selection<SVGElement, unknown, null, undefined>
+  ) => {
     // Cursor interaction (only if not static)
     if (isStatic) return;
     // Remove previous event listeners before adding new ones
@@ -486,10 +495,6 @@ export const createTimeVizChart = () => {
   };
 
   const validateSetup = (): boolean => {
-    if (!config) {
-      console.warn("[d3-time-viz] Chart config is missing.");
-      return false;
-    }
     if (!series || !Array.isArray(series) || !series.length) {
       console.warn("[d3-time-viz] Chart series is missing or empty.");
       return false;
@@ -498,16 +503,21 @@ export const createTimeVizChart = () => {
       console.warn("[d3-time-viz] Chart data is missing or empty.");
       return false;
     }
-    if (typeof xSerie !== 'function') {
+    if (typeof xSerie !== "function") {
       console.warn("[d3-time-viz] xSerie accessor is missing.");
       return false;
     }
-    if (!colorScale || typeof colorScale !== 'function' || typeof colorScale.domain !== 'function' || typeof colorScale.range !== 'function') {
+    if (
+      !colorScale ||
+      typeof colorScale !== "function" ||
+      typeof colorScale.domain !== "function" ||
+      typeof colorScale.range !== "function"
+    ) {
       console.warn("[d3-time-viz] colorScale is missing or invalid.");
       return false;
     }
     return true;
-  }
+  };
 
   /**
    * The main chart function that renders the time visualization.
@@ -519,10 +529,9 @@ export const createTimeVizChart = () => {
    * ```ts
    * const svg = d3.select("svg");
    * const chart = createTimeVizChart();
-   * chart(svg);
+   * svg.call(chart);
    * ```
    */
-
   const chart = (
     selection: Selection<SVGElement, unknown, null, undefined>
   ) => {
@@ -548,7 +557,9 @@ export const createTimeVizChart = () => {
     const xVals = data.map(xSerie);
     const [xMin, xMax] = d3.extent(xVals);
     if (!(xMin instanceof Date && xMax instanceof Date)) {
-      console.warn("[d3-time-viz] xSerie must return Date objects for all data points.");
+      console.warn(
+        "[d3-time-viz] xSerie must return Date objects for all data points."
+      );
       return;
     }
     xScale = d3
@@ -564,7 +575,9 @@ export const createTimeVizChart = () => {
 
     const [yMin, yMax] = d3.extent(yVals);
     if (!(typeof yMin === "number" && typeof yMax === "number")) {
-      console.warn("[d3-time-viz] Series accessors must return numbers for all data points.");
+      console.warn(
+        "[d3-time-viz] Series accessors must return numbers for all data points."
+      );
       return;
     }
     yScale = d3
@@ -586,130 +599,214 @@ export const createTimeVizChart = () => {
     setupChartEventListeners(selection);
   };
 
-
+  /**
+   * Sets the x-axis accessor function.
+   * @param accessor - A function that extracts the x value from a data row.
+   * @returns The chart instance for chaining.
+   */
   chart.xSerie = (accessor: (d: ChartDataRow) => Date | number) => {
-    if (typeof accessor !== 'function') {
-      console.warn('xSerie accessor must be a function');
+    if (typeof accessor !== "function") {
+      console.warn("xSerie accessor must be a function");
       return chart;
     }
     xSerie = accessor;
     return chart;
   };
-  chart.config = (configuration: TimeVizConfig) => {
-    if (typeof configuration !== 'object' || configuration == null) {
-      console.warn('config must be an object');
-      return chart;
-    }
-    config = configuration;
-    return chart;
-  };
+
+  /**
+   * Sets the series configuration.
+   * @param fields - An array of series configurations.
+   * @returns The chart instance for chaining.
+   */
   chart.series = (fields: TimeVizSeriesConfig[]) => {
     if (!Array.isArray(fields)) {
-      console.warn('series must be an array');
+      console.warn("series must be an array");
       return chart;
     }
     series = fields;
     return chart;
   };
+
+  /**
+   * Sets the data for the chart.
+   * @param dataset - An array of data rows.
+   * @returns The chart instance for chaining.
+   */
   chart.data = (dataset: ChartDataRow[]) => {
     if (!Array.isArray(dataset)) {
-      console.warn('data must be an array');
+      console.warn("data must be an array");
       return chart;
     }
     data = dataset;
     return chart;
   };
+
+  /**
+   * Sets the color scale for the chart.
+   * @param color - A D3 scaleOrdinal function for mapping data values to colors.
+   * @returns The chart instance for chaining.
+   */
   chart.colorScale = (color: ScaleOrdinal<string, string>) => {
-    if (typeof color !== 'function' || typeof color.domain !== 'function' || typeof color.range !== 'function') {
-      console.warn('colorScale must be a valid D3 scaleOrdinal');
+    if (
+      typeof color !== "function" ||
+      typeof color.domain !== "function" ||
+      typeof color.range !== "function"
+    ) {
+      console.warn("colorScale must be a valid D3 scaleOrdinal");
       return chart;
     }
     colorScale = color;
     return chart;
   };
+
+  /**
+   * Sets the curve interpolation for the line series.
+   * @param bool - A boolean indicating whether the line should be curved.
+   * @returns The chart instance for chaining.
+   */
   chart.isCurved = (bool: boolean) => {
-    if (typeof bool !== 'boolean') {
-      console.warn('isCurved must be a boolean');
+    if (typeof bool !== "boolean") {
+      console.warn("isCurved must be a boolean");
       return chart;
     }
     isCurved = bool;
     return chart;
   };
+
+  /**
+   * Sets the static state of the chart.
+   * @param bool - A boolean indicating whether the chart should be static.
+   * @returns The chart instance for chaining.
+   */
   chart.isStatic = (bool: boolean) => {
-    if (typeof bool !== 'boolean') {
-      console.warn('isStatic must be a boolean');
+    if (typeof bool !== "boolean") {
+      console.warn("isStatic must be a boolean");
       return chart;
     }
     isStatic = bool;
     return chart;
   };
+
+  /**
+   * Sets the transition time for the chart.
+   * @param time - The transition time in milliseconds.
+   * @returns The chart instance for chaining.
+   */
   chart.transitionTime = (time: number) => {
-    if (typeof time !== 'number' || time < 0) {
-      console.warn('transitionTime must be a non-negative number');
+    if (typeof time !== "number" || time < 0) {
+      console.warn("transitionTime must be a non-negative number");
       return chart;
     }
     transitionTime = time;
     return chart;
   };
+
+  /**
+   * Sets the number of ticks on the x-axis.
+   * @param quantity - The number of ticks.
+   * @returns The chart instance for chaining.
+   */
   chart.xTicks = (quantity: number) => {
-    if (typeof quantity !== 'number' || quantity < 0) {
-      console.warn('xTicks must be a non-negative number');
+    if (typeof quantity !== "number" || quantity < 0) {
+      console.warn("xTicks must be a non-negative number");
       return chart;
     }
     xTicks = quantity;
     return chart;
   };
+
+  /**
+   * Sets the number of ticks on the y-axis.
+   * @param quantity - The number of ticks.
+   * @returns The chart instance for chaining.
+   */
   chart.yTicks = (quantity: number) => {
-    if (typeof quantity !== 'number' || quantity < 0) {
-      console.warn('yTicks must be a non-negative number');
+    if (typeof quantity !== "number" || quantity < 0) {
+      console.warn("yTicks must be a non-negative number");
       return chart;
     }
     yTicks = quantity;
     return chart;
   };
+
+  /**
+   * Sets the margin for the chart.
+   * @param marg - An object specifying the margin values.
+   * @returns The chart instance for chaining.
+   */
   chart.margin = (marg: MarginConfig) => {
-    if (typeof marg !== 'object' || marg == null) {
-      console.warn('margin must be an object');
+    if (typeof marg !== "object" || marg == null) {
+      console.warn("margin must be an object");
       return chart;
     }
     margin = { ...margin, ...marg };
     return chart;
   };
+
+  /**
+   * Sets the format for the x-axis ticks.
+   * @param format - A string specifying the tick format.
+   * @returns The chart instance for chaining.
+   */
   chart.formatXAxis = (format: string) => {
-    if (typeof format !== 'string') {
-      console.warn('formatXAxis must be a string');
+    if (typeof format !== "string") {
+      console.warn("formatXAxis must be a string");
       return chart;
     }
     formatXAxis = format;
     return chart;
   };
+
+  /**
+   * Sets the format for the y-axis ticks.
+   * @param format - A string specifying the tick format.
+   * @returns The chart instance for chaining.
+   */
   chart.formatYAxis = (format: string) => {
-    if (typeof format !== 'string') {
-      console.warn('formatYAxis must be a string');
+    if (typeof format !== "string") {
+      console.warn("formatYAxis must be a string");
       return chart;
     }
     formatYAxis = format;
     return chart;
   };
+
+  /**
+   * Sets the label for the y-axis.
+   * @param label - A string specifying the y-axis label.
+   * @returns The chart instance for chaining.
+   */
   chart.yAxisLabel = (label: string) => {
-    if (typeof label !== 'string') {
-      console.warn('yAxisLabel must be a string');
+    if (typeof label !== "string") {
+      console.warn("yAxisLabel must be a string");
       return chart;
     }
     yAxisLabel = label;
     return chart;
   };
+
+  /**
+   * Sets the label for the x-axis.
+   * @param label - A string specifying the x-axis label.
+   * @returns The chart instance for chaining.
+   */
   chart.xAxisLabel = (label: string) => {
-    if (typeof label !== 'string') {
-      console.warn('xAxisLabel must be a string');
+    if (typeof label !== "string") {
+      console.warn("xAxisLabel must be a string");
       return chart;
     }
     xAxisLabel = label;
     return chart;
   };
+
+  /**
+   * Sets the tooltip for the chart.
+   * @param tooltipInstance - A valid TipVizTooltip instance.
+   * @returns The chart instance for chaining.
+   */
   chart.tooltip = (tooltipInstance: TipVizTooltip) => {
-    if (typeof tooltipInstance !== 'object' || tooltipInstance == null) {
-      console.warn('tooltip must be a valid TipVizTooltip instance');
+    if (typeof tooltipInstance !== "object" || tooltipInstance == null) {
+      console.warn("tooltip must be a valid TipVizTooltip instance");
       return chart;
     }
     tooltip = tooltipInstance;

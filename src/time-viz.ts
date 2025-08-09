@@ -190,12 +190,6 @@ export class TimeViz extends LitElement {
   @query("#d3-tooltip")
   private declare _tooltip: TipVizTooltip;
 
-  /**
-   * Sets the HTML template callback for the tipviz tooltip.
-   * The callback receives the datum and target element.
-   */
-  private _tooltipTemplate: ((datum: any, target?: Element) => string) | null = null;
-
   constructor() {
     super();
     this.isStatic = false;
@@ -256,14 +250,6 @@ export class TimeViz extends LitElement {
     this._tooltip.setHtml(content);
   }
 
-  /**
-   * Sets the HTML template callback for the tipviz tooltip.
-   * The callback receives the datum and target element.
-   */
-  public setTooltipTemplate(template: (datum: any, target?: Element) => string): void {
-    this._tooltipTemplate = template;
-  }
-
   protected updated(
     changedProperties: Map<string | number | symbol, unknown>
   ): void {
@@ -311,7 +297,6 @@ export class TimeViz extends LitElement {
       return;
     const chart = createTimeVizChart()
       .colorScale(this.#colorScale)
-      .config(this._config)
       .data(this._data)
       .formatXAxis(this.formatXAxis)
       .formatYAxis(this.formatYAxis)
@@ -319,11 +304,11 @@ export class TimeViz extends LitElement {
       .isStatic(this.isStatic)
       .margin(this.margin)
       .series(this.filteredSeries)
-      .transitionTime(this.transitionTime)
       .tooltip(this._tooltip)
-      .xTicks(this.xTicks)
+      .transitionTime(this.transitionTime)
       .xAxisLabel(this.xAxisLabel)
       .xSerie(this._config.xSerie.accessor)
+      .xTicks(this.xTicks)
       .yAxisLabel(this.yAxisLabel)
       .yTicks(this.yTicks);
 
