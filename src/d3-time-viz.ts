@@ -491,32 +491,234 @@ export const createTimeVizChart = () => {
       .on("pointerout", handleClosestPointOut);
   };
 
-  chart.xSerie = (accessor: (d: ChartDataRow) => Date | number) => (
-    (xSerie = accessor), chart
-  );
-  chart.config = (configuration: TimeVizConfig) => (
-    (config = configuration), chart
-  );
-  chart.series = (fields: TimeVizSeriesConfig[]) => ((series = fields), chart);
-  chart.data = (dataset: ChartDataRow[]) => ((data = dataset), chart);
-  chart.colorScale = (color: ScaleOrdinal<string, string>) => (
-    (colorScale = color), chart
-  );
-  chart.isCurved = (bool: boolean) => ((isCurved = bool), chart);
-  chart.isStatic = (bool: boolean) => ((isStatic = bool), chart);
-  chart.transitionTime = (time: number) => ((transitionTime = time), chart);
-  chart.xTicks = (quantity: number) => ((xTicks = quantity), chart);
-  chart.yTicks = (quantity: number) => ((yTicks = quantity), chart);
-  chart.margin = (marg: MarginConfig) => (
-    (margin = { ...margin, ...marg }), chart
-  );
-  chart.formatXAxis = (format: string) => ((formatXAxis = format), chart);
-  chart.formatYAxis = (format: string) => ((formatYAxis = format), chart);
-  chart.yAxisLabel = (label: string) => ((yAxisLabel = label), chart);
-  chart.xAxisLabel = (label: string) => ((xAxisLabel = label), chart);
-  chart.tooltip = (tooltipInstance: TipVizTooltip) => (
-    (tooltip = tooltipInstance), chart
-  );
+
+  chart.xSerie = (accessor: (d: ChartDataRow) => Date | number) => {
+    if (typeof accessor !== 'function') {
+      console.warn('xSerie accessor must be a function');
+      return chart;
+    }
+    xSerie = accessor;
+    return chart;
+  };
+  chart.config = (configuration: TimeVizConfig) => {
+    if (typeof configuration !== 'object' || configuration == null) {
+      console.warn('config must be an object');
+      return chart;
+    }
+    config = configuration;
+    return chart;
+  };
+  chart.series = (fields: TimeVizSeriesConfig[]) => {
+    if (!Array.isArray(fields)) {
+      console.warn('series must be an array');
+      return chart;
+    }
+    series = fields;
+    return chart;
+  };
+  chart.data = (dataset: ChartDataRow[]) => {
+    if (!Array.isArray(dataset)) {
+      console.warn('data must be an array');
+      return chart;
+    }
+    data = dataset;
+    return chart;
+  };
+  chart.colorScale = (color: ScaleOrdinal<string, string>) => {
+    if (typeof color !== 'function' || typeof color.domain !== 'function' || typeof color.range !== 'function') {
+      console.warn('colorScale must be a valid D3 scaleOrdinal');
+      return chart;
+    }
+    colorScale = color;
+    return chart;
+  };
+  chart.isCurved = (bool: boolean) => {
+    if (typeof bool !== 'boolean') {
+      console.warn('isCurved must be a boolean');
+      return chart;
+    }
+    isCurved = bool;
+    return chart;
+  };
+  chart.isStatic = (bool: boolean) => {
+    if (typeof bool !== 'boolean') {
+      console.warn('isStatic must be a boolean');
+      return chart;
+    }
+    isStatic = bool;
+    return chart;
+  };
+  chart.transitionTime = (time: number) => {
+    if (typeof time !== 'number' || time < 0) {
+      console.warn('transitionTime must be a non-negative number');
+      return chart;
+    }
+    transitionTime = time;
+    return chart;
+  };
+  chart.xTicks = (quantity: number) => {
+    if (typeof quantity !== 'number' || quantity < 0) {
+      console.warn('xTicks must be a non-negative number');
+      return chart;
+    }
+    xTicks = quantity;
+    return chart;
+  };
+  chart.yTicks = (quantity: number) => {
+    if (typeof quantity !== 'number' || quantity < 0) {
+      console.warn('yTicks must be a non-negative number');
+      return chart;
+    }
+    yTicks = quantity;
+    return chart;
+  };
+  chart.margin = (marg: MarginConfig) => {
+    if (typeof marg !== 'object' || marg == null) {
+      console.warn('margin must be an object');
+      return chart;
+    }
+    margin = { ...margin, ...marg };
+    return chart;
+  };
+  chart.formatXAxis = (format: string) => {
+    if (typeof format !== 'string') {
+      console.warn('formatXAxis must be a string');
+      return chart;
+    }
+    formatXAxis = format;
+    return chart;
+  };
+  chart.formatYAxis = (format: string) => {
+    if (typeof format !== 'string') {
+      console.warn('formatYAxis must be a string');
+      return chart;
+    }
+    formatYAxis = format;
+    return chart;
+  };
+  chart.yAxisLabel = (label: string) => {
+    if (typeof label !== 'string') {
+      console.warn('yAxisLabel must be a string');
+      return chart;
+    }
+    yAxisLabel = label;
+    return chart;
+  };
+  chart.xAxisLabel = (label: string) => {
+    if (typeof label !== 'string') {
+      console.warn('xAxisLabel must be a string');
+      return chart;
+    }
+    xAxisLabel = label;
+    return chart;
+  };
+  chart.tooltip = (tooltipInstance: TipVizTooltip) => {
+    if (typeof tooltipInstance !== 'object' || tooltipInstance == null) {
+      console.warn('tooltip must be a valid TipVizTooltip instance');
+      return chart;
+    }
+    tooltip = tooltipInstance;
+    return chart;
+  };
+
+  /**
+   * Set multiple chart options at once for improved chainability and clarity.
+   * Accepts a partial config object with any supported builder options.
+   */
+  chart.setOptions = (options: Partial<TimeVizConfig> & {
+    series?: TimeVizSeriesConfig[];
+    data?: ChartDataRow[];
+    colorScale?: ScaleOrdinal<string, string>;
+    isCurved?: boolean;
+    isStatic?: boolean;
+    transitionTime?: number;
+    xTicks?: number;
+    yTicks?: number;
+    margin?: MarginConfig;
+    formatXAxis?: string;
+    formatYAxis?: string;
+    yAxisLabel?: string;
+    xAxisLabel?: string;
+    tooltip?: TipVizTooltip;
+    xSerie?: (d: ChartDataRow) => Date | number;
+  }) => {
+    if (options.series && !Array.isArray(options.series)) {
+      console.warn('series must be an array');
+    } else if (options.series) {
+      series = options.series;
+    }
+    if (options.data && !Array.isArray(options.data)) {
+      console.warn('data must be an array');
+    } else if (options.data) {
+      data = options.data;
+    }
+    if (options.colorScale && (typeof options.colorScale !== 'function' || typeof options.colorScale.domain !== 'function' || typeof options.colorScale.range !== 'function')) {
+      console.warn('colorScale must be a valid D3 scaleOrdinal');
+    } else if (options.colorScale) {
+      colorScale = options.colorScale;
+    }
+    if (typeof options.isCurved !== 'undefined' && typeof options.isCurved !== 'boolean') {
+      console.warn('isCurved must be a boolean');
+    } else if (typeof options.isCurved === 'boolean') {
+      isCurved = options.isCurved;
+    }
+    if (typeof options.isStatic !== 'undefined' && typeof options.isStatic !== 'boolean') {
+      console.warn('isStatic must be a boolean');
+    } else if (typeof options.isStatic === 'boolean') {
+      isStatic = options.isStatic;
+    }
+    if (typeof options.transitionTime !== 'undefined' && (typeof options.transitionTime !== 'number' || options.transitionTime < 0)) {
+      console.warn('transitionTime must be a non-negative number');
+    } else if (typeof options.transitionTime === 'number') {
+      transitionTime = options.transitionTime;
+    }
+    if (typeof options.xTicks !== 'undefined' && (typeof options.xTicks !== 'number' || options.xTicks < 0)) {
+      console.warn('xTicks must be a non-negative number');
+    } else if (typeof options.xTicks === 'number') {
+      xTicks = options.xTicks;
+    }
+    if (typeof options.yTicks !== 'undefined' && (typeof options.yTicks !== 'number' || options.yTicks < 0)) {
+      console.warn('yTicks must be a non-negative number');
+    } else if (typeof options.yTicks === 'number') {
+      yTicks = options.yTicks;
+    }
+    if (options.margin && (typeof options.margin !== 'object' || options.margin == null)) {
+      console.warn('margin must be an object');
+    } else if (options.margin) {
+      margin = { ...margin, ...options.margin };
+    }
+    if (typeof options.formatXAxis !== 'undefined' && typeof options.formatXAxis !== 'string') {
+      console.warn('formatXAxis must be a string');
+    } else if (typeof options.formatXAxis === 'string') {
+      formatXAxis = options.formatXAxis;
+    }
+    if (typeof options.formatYAxis !== 'undefined' && typeof options.formatYAxis !== 'string') {
+      console.warn('formatYAxis must be a string');
+    } else if (typeof options.formatYAxis === 'string') {
+      formatYAxis = options.formatYAxis;
+    }
+    if (typeof options.yAxisLabel !== 'undefined' && typeof options.yAxisLabel !== 'string') {
+      console.warn('yAxisLabel must be a string');
+    } else if (typeof options.yAxisLabel === 'string') {
+      yAxisLabel = options.yAxisLabel;
+    }
+    if (typeof options.xAxisLabel !== 'undefined' && typeof options.xAxisLabel !== 'string') {
+      console.warn('xAxisLabel must be a string');
+    } else if (typeof options.xAxisLabel === 'string') {
+      xAxisLabel = options.xAxisLabel;
+    }
+    if (options.tooltip && (typeof options.tooltip !== 'object' || options.tooltip == null)) {
+      console.warn('tooltip must be a valid TipVizTooltip instance');
+    } else if (options.tooltip) {
+      tooltip = options.tooltip;
+    }
+    if (options.xSerie && typeof options.xSerie !== 'function') {
+      console.warn('xSerie accessor must be a function');
+    } else if (options.xSerie) {
+      xSerie = options.xSerie;
+    }
+    return chart;
+  };
 
   return chart;
 };
