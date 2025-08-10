@@ -146,13 +146,15 @@ export class TimeViz extends LitElement {
     }
 
     .legend-item {
+      pointer-events: none;
+
       text {
         font-size: 0.8em;
       }
 
       rect {
-        width: 1.1em;
-        height: 1.1em;
+        width: 1em;
+        height: 1em;
         display: inline-block;
         margin-right: 0.5rem;
       }
