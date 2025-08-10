@@ -118,7 +118,7 @@ export class TimeViz extends LitElement {
         }
       }
 
-      &:has(.serie:hover) .serie:not(:hover) {
+      &:has(.serie:hover, .point:hover) .serie:not(:hover) {
         opacity: 0.3;
       }
     }
@@ -142,19 +142,17 @@ export class TimeViz extends LitElement {
       }
     }
 
-    .legend {
-      font-size: 0.75em;
+    .legend-item {
+      text {
+        font-size: 0.8em;
+      }
 
-      .legend-square {
-        width: 1.5em;
-        height: 1.5em;
+      rect {
+        width: 1.1em;
+        height: 1.1em;
         display: inline-block;
         margin-right: 0.5rem;
       }
-    }
-
-    .legend-item.hidden {
-      opacity: 0.3;
     }
 
     .axis-label {
