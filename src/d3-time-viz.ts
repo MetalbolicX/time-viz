@@ -1,10 +1,6 @@
 import * as d3 from "d3";
 import type { Selection, ScaleOrdinal } from "d3";
-import type {
-  TimeVizSeriesConfig,
-  ChartDataRow,
-  MarginConfig,
-} from "./types";
+import type { TimeVizSeriesConfig, ChartDataRow, MarginConfig } from "./types";
 import type { TipVizTooltip } from "tipviz";
 
 /**
@@ -192,30 +188,47 @@ export const createTimeVizChart = () => {
   ): void => {
     if (!(series?.length && data?.length)) return;
 
-    const lineGenerators = series.map(({ accessor }) => {
-      const line = d3
-        .line<ChartDataRow>()
-        .x((d) => xScale(xSerie(d)))
-        .y((d) => yScale(accessor(d)));
-      isCurved && line.curve(d3.curveCatmullRom);
-      return line;
-    });
+    const line = d3
+      .line<{ x: number | Date; y: number }>()
+      .x(({ x }) => xScale(x))
+      .y(({ y }) => yScale(y));
+    isCurved && line.curve(d3.curveCatmullRom);
 
-    selection
+    // Create a group for all series
+    const seriesGroup = selection
       .selectAll(".series")
       .data([null])
       .join("g")
-      .attr("class", "series")
+      .attr("class", "series");
+
+    // For each series, create a group and a single path inside it
+    const group = seriesGroup
+      .selectAll<SVGGElement, TimeVizSeriesConfig>(".series-group")
+      .data(series)
+      .join("g")
+      .attr("class", "series-group")
+      .attr("data-label", ({ label }) => label);
+
+    group
       .selectAll<SVGPathElement, TimeVizSeriesConfig>("path.serie")
-      .data(series, ({ label }) => label)
+      .data(({ label, accessor, color }) => [
+        {
+          label,
+          color: color || colorScale(label),
+          coordinates: data.map((row) => ({
+            x: xSerie(row),
+            y: accessor(row),
+          })),
+        },
+      ])
       .join(
         (enter) =>
           enter
             .append("path")
             .attr("class", "serie")
             .attr("data-label", ({ label }) => label)
-            .attr("d", (_, i) => lineGenerators.at(i)?.(data) ?? "")
-            .style("stroke", ({ color, label }) => color || colorScale(label))
+            .attr("d", ({ coordinates }) => line(coordinates))
+            .style("stroke", ({ color }) => color)
             .call((serie) => {
               const node = serie.node();
               if (!node) return;
@@ -231,8 +244,8 @@ export const createTimeVizChart = () => {
           update
             .transition()
             .duration(transitionTime)
-            .style("stroke", ({ color, label }) => color || colorScale(label))
-            .attr("d", (_, i) => lineGenerators.at(i)?.(data) ?? ""),
+            .style("stroke", ({ color }) => color)
+            .attr("d", ({ coordinates }) => line(coordinates)),
         (exit) => exit.remove()
       );
   };
