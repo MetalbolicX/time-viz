@@ -451,7 +451,7 @@ export const createTimeVizChart = () => {
   const handleClosestPointOver = ({ target }: PointerEvent) => {
     if (
       target instanceof SVGElement &&
-      target.classList.contains("cursor-point")
+      target.classList.contains("point")
     ) {
       const datum = d3.select(target).datum();
       if (hideTooltipTimeout) {
@@ -474,7 +474,7 @@ export const createTimeVizChart = () => {
   const handleClosestPointOut = ({ target }: PointerEvent) => {
     if (
       target instanceof SVGElement &&
-      target.classList.contains("cursor-point")
+      target.classList.contains("point")
     ) {
       // Debounce hide to prevent flicker on rapid pointer transitions
       if (hideTooltipTimeout) clearTimeout(hideTooltipTimeout);
