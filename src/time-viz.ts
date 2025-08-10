@@ -104,10 +104,25 @@ export class TimeViz extends LitElement {
       stroke-width: 0;
     }
 
-    .serie {
-      fill: none;
-      stroke-width: 2;
+    .series {
+      opacity: 0.6;
+      transition: opacity 0.3s;
+
+      .serie {
+        fill: none;
+        stroke-width: 2;
+
+        &:hover {
+          opacity: 1;
+          stroke-width: 4;
+        }
+      }
+
+      &:has(.serie:hover) .serie:not(:hover) {
+        opacity: 0.3;
+      }
     }
+
 
     .cursor.hidden {
       visibility: hidden;
