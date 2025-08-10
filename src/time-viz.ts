@@ -123,21 +123,23 @@ export class TimeViz extends LitElement {
       }
     }
 
+    .cursor {
 
-    .cursor.hidden {
-      visibility: hidden;
-    }
+      &.hidden {
+        visibility: hidden;
+      }
 
-    .cursor-line {
-      stroke: #666;
-      stroke-width: 1;
-      stroke-dasharray: 3, 3;
-      pointer-events: none;
-    }
+      &.point {
+        fill: white;
+        stroke-width: 2;
+      }
 
-    .cursor-point {
-      fill: white;
-      stroke-width: 2;
+      &.vertical-line {
+        stroke: #666;
+        stroke-width: 1;
+        stroke-dasharray: 3, 3;
+        pointer-events: none;
+      }
     }
 
     .legend {

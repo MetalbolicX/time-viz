@@ -264,28 +264,34 @@ export const createTimeVizChart = () => {
     closestRow: ChartDataRow
   ): void => {
     if (isStatic) return;
-    const cursorGroup = selection
-      .selectAll("g.cursor")
+    const seriesGroup = selection
+      .selectAll(".series")
       .data([null])
       .join("g")
-      .attr("class", "cursor");
+      .attr("class", "series");
 
-    cursorGroup
-      .selectAll(".cursor-point")
+    seriesGroup
+      .selectAll(".series-group")
       .data(
-        series.map(({ accessor, label, color }) => ({
+        series.map(({ label, color, accessor }) => ({
           label,
-          color,
+          color: color || colorScale(label),
           x: xSerie(closestRow),
           y: accessor(closestRow),
         }))
       )
+      .join("g")
+      .attr("class", "series-group")
+      .attr("data-label", ({ label }) => label)
+      .selectAll(".cursor.point")
+      .data(({ x, y, color, label }) => [{ x, y, color, label }])
       .join("circle")
-      .attr("class", "cursor-point")
+      .attr("class", "cursor point")
+      .attr("data-label", ({ label }) => label)
       .attr("cx", ({ x }) => xScale(x))
       .attr("cy", ({ y }) => yScale(y))
       .attr("r", 4)
-      .style("stroke", ({ color, label }) => color || colorScale(label))
+      .style("stroke", ({ color }) => color)
       .attr("tabindex", 0)
       .attr("role", "button")
       .attr(
@@ -293,11 +299,11 @@ export const createTimeVizChart = () => {
         ({ label, x, y }) => `Data point for ${label}, x: ${x}, y: ${y}`
       );
 
-    cursorGroup
-      .selectAll(".cursor-line")
+    seriesGroup
+      .selectAll(".cursor.vertical-line")
       .data([closestRow])
       .join("line")
-      .attr("class", "cursor-line")
+      .attr("class", "cursor vertical-line")
       .attr("x1", xScale(xSerie(closestRow)))
       .attr("y1", margin.top)
       .attr("x2", xScale(xSerie(closestRow)))
@@ -415,7 +421,7 @@ export const createTimeVizChart = () => {
     const isWithinXAxis = mouseX >= xMinRange && mouseX <= xMaxRange;
     const isWithinYAxis = mouseY >= yMinRange && mouseY <= yMaxRange;
     if (!(isWithinXAxis && isWithinYAxis)) {
-      selection.select(".cursor").classed("hidden", true);
+      selection.selectAll(".cursor").classed("hidden", true);
       lastCursorIdx = null;
       return;
     }
