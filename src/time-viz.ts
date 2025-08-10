@@ -111,15 +111,18 @@ export class TimeViz extends LitElement {
       .serie {
         fill: none;
         stroke-width: 2;
-
-        &:hover {
-          opacity: 1;
-          stroke-width: 4;
-        }
       }
 
-      &:has(.serie:hover, .point:hover) .serie:not(:hover) {
+      &:has(.serie:hover, .point:hover) .series-group:not(:hover) {
         opacity: 0.3;
+      }
+
+      &:has(.serie:hover, .point:hover) .series-group:hover {
+        opacity: 1;
+
+        .serie {
+          stroke-width: 4;
+        }
       }
     }
 
