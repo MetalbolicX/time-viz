@@ -370,26 +370,31 @@ export const createTimeVizChart = () => {
   ): void => {
     if (!series?.length) return;
 
+    // Place legend at top right, horizontally
     const legendGroup = selection
       .selectAll("g.legend")
       .data([null])
       .join("g")
       .attr("class", "legend")
-      .attr("transform", `translate(${innerWidth}, ${margin.top})`);
+      .attr("transform", `translate(${innerWidth / 2 - margin.left}, ${margin.top / 2})`); // move to top left, adjust as needed
 
+    // Horizontal layout: each item is offset by its width
+    const itemWidth = 100; // px, adjust as needed
     legendGroup
       .selectAll(".legend-item")
       .data(series)
       .join("g")
       .attr("class", "legend-item")
       .attr("data-label", ({ label }) => label)
-      .attr("transform", (_, i) => `translate(0, ${20 * i})`)
+      .attr("transform", (_, i) => `translate(${i * itemWidth}, 0)`)
       .call((group) => {
         group
           .selectAll("rect")
           .data((d) => [d])
           .join("rect")
           .attr("class", "legend-square")
+          .attr("x", 0)
+          .attr("y", 0)
           .style("fill", ({ color, label }) => color || colorScale(label));
 
         group
