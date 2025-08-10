@@ -5,9 +5,9 @@ export default defineConfig({
   build: {
     lib: {
       entry: "src/index.ts",
-      name: "TimeViz",
+      name: "TimeViz", // global variable for UMD
       fileName: "time-viz",
-      formats: ["es", "umd"],
+      formats: ["es", "umd"], // only ESM and UMD for browser/CDN
     },
     rollupOptions: {
       external: ["lit", "d3"],
@@ -19,12 +19,14 @@ export default defineConfig({
       },
     },
   },
-  plugins: [dts({
-    entryRoot: "src",
-  outDir: "dist/types",
-    insertTypesEntry: true,
-    cleanVueFileName: true,
-  })],
+  plugins: [
+    dts({
+      entryRoot: "src",
+      outDir: "dist/types",
+      insertTypesEntry: true,
+      cleanVueFileName: true,
+    }),
+  ],
   server: {
     port: 3000,
     open: true,

@@ -20,7 +20,8 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "start": "vite"
+    "start": "vite",
+    "ts:build": "tsdown"
   },
   "author": {
     "name": "José Martínez Santana"

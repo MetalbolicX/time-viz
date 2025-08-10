@@ -26,10 +26,10 @@ importers:
         version: 5.9.2
       vite:
         specifier: ^7.0.6
-        version: 7.0.6
+        version: 7.0.6(jiti@2.5.1)
       vite-plugin-dts:
         specifier: ^4.5.4
-        version: 4.5.4(rollup@4.46.2)(typescript@5.9.2)(vite@7.0.6)
+        version: 4.5.4(rollup@4.46.2)(typescript@5.9.2)(vite@7.0.6(jiti@2.5.1))
 
 packages:
 
@@ -763,6 +763,10 @@ packages:
   is-core-module@2.16.1:
     resolution: {integrity: sha512-UfoeMA6fIJ8wTYFEUjelnaGI67v6+N7qXJEvQuIGa99l4xsCruSYOVSQ0uPANn4dAzm8lkYPaKLrrijLq7x23w==}
     engines: {node: '>= 0.4'}
+
+  jiti@2.5.1:
+    resolution: {integrity: sha512-twQoecYPiVA5K/h6SxtORw/Bs3ar+mLUtoPSc7iMXzQzK8d7eJ/R09wmTwAjiamETn1cXYPGfNnu7DMoHgu12w==}
+    hasBin: true
 
   jju@1.4.0:
     resolution: {integrity: sha512-8wb9Yw966OSxApiCt0K3yNJL8pnNeIv+OEq2YMidz4FKP6nonSRoOXc80iXY4JaN2FC11B9qsNmDsm+ZOfMROA==}
@@ -1682,6 +1686,9 @@ snapshots:
     dependencies:
       hasown: 2.0.2
 
+  jiti@2.5.1:
+    optional: true
+
   jju@1.4.0: {}
 
   json-schema-traverse@1.0.0: {}
@@ -1858,7 +1865,7 @@ snapshots:
     dependencies:
       punycode: 2.3.1
 
-  vite-plugin-dts@4.5.4(rollup@4.46.2)(typescript@5.9.2)(vite@7.0.6):
+  vite-plugin-dts@4.5.4(rollup@4.46.2)(typescript@5.9.2)(vite@7.0.6(jiti@2.5.1)):
     dependencies:
       '@microsoft/api-extractor': 7.52.10
       '@rollup/pluginutils': 5.2.0(rollup@4.46.2)
@@ -1871,13 +1878,13 @@ snapshots:
       magic-string: 0.30.17
       typescript: 5.9.2
     optionalDependencies:
-      vite: 7.0.6
+      vite: 7.0.6(jiti@2.5.1)
     transitivePeerDependencies:
       - '@types/node'
       - rollup
       - supports-color
 
-  vite@7.0.6:
+  vite@7.0.6(jiti@2.5.1):
     dependencies:
       esbuild: 0.25.8
       fdir: 6.4.6(picomatch@4.0.3)
@@ -1887,6 +1894,7 @@ snapshots:
       tinyglobby: 0.2.14
     optionalDependencies:
       fsevents: 2.3.3
+      jiti: 2.5.1
 
   vscode-uri@3.1.0: {}
 
