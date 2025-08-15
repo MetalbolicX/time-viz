@@ -229,11 +229,10 @@ export const createTimeVizChart = () => {
             .attr("data-label", ({ label }) => label)
             .attr("d", ({ coordinates }) => line(coordinates))
             .style("stroke", ({ color }) => color)
-            .call((serie) => {
-              const node = serie.node();
-              if (!node) return;
-              const totalLength = node.getTotalLength();
-              serie
+            .each(function () {
+              const path = d3.select(this);
+              const totalLength = (this as SVGPathElement).getTotalLength();
+              path
                 .attr("stroke-dasharray", totalLength)
                 .attr("stroke-dashoffset", totalLength)
                 .transition()
