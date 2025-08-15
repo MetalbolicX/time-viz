@@ -241,8 +241,8 @@ export const createTimeVizChart = () => {
             }),
         (update) =>
           update
-            // clear stroke-dash settings that were added by the enter animation
             .each(function () {
+              // clear stroke-dash settings that were added by the enter animation
               d3.select(this)
                 .attr("stroke-dasharray", null)
                 .attr("stroke-dashoffset", null);
