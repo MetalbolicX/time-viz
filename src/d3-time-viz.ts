@@ -241,6 +241,12 @@ export const createTimeVizChart = () => {
             }),
         (update) =>
           update
+            // clear stroke-dash settings that were added by the enter animation
+            .each(function () {
+              d3.select(this)
+                .attr("stroke-dasharray", null)
+                .attr("stroke-dashoffset", null);
+            })
             .transition()
             .duration(transitionTime)
             .style("stroke", ({ color }) => color)
@@ -375,7 +381,10 @@ export const createTimeVizChart = () => {
       .data([null])
       .join("g")
       .attr("class", "legend")
-      .attr("transform", `translate(${innerWidth / 2 - margin.left}, ${margin.top / 2})`); // move to top left, adjust as needed
+      .attr(
+        "transform",
+        `translate(${innerWidth / 2 - margin.left}, ${margin.top / 2})`
+      ); // move to top left, adjust as needed
 
     // Horizontal layout: each item is offset by its width
     const itemWidth = 100; // px, adjust as needed
@@ -453,10 +462,7 @@ export const createTimeVizChart = () => {
   const TOOLTIP_HIDE_DELAY = 40; // ms
 
   const handleClosestPointOver = ({ target }: PointerEvent) => {
-    if (
-      target instanceof SVGElement &&
-      target.classList.contains("point")
-    ) {
+    if (target instanceof SVGElement && target.classList.contains("point")) {
       const datum = d3.select(target).datum();
       if (hideTooltipTimeout) {
         clearTimeout(hideTooltipTimeout);
@@ -476,10 +482,7 @@ export const createTimeVizChart = () => {
    * @returns {void}
    */
   const handleClosestPointOut = ({ target }: PointerEvent) => {
-    if (
-      target instanceof SVGElement &&
-      target.classList.contains("point")
-    ) {
+    if (target instanceof SVGElement && target.classList.contains("point")) {
       // Debounce hide to prevent flicker on rapid pointer transitions
       if (hideTooltipTimeout) clearTimeout(hideTooltipTimeout);
       hideTooltipTimeout = setTimeout(() => {
