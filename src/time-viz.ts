@@ -263,6 +263,9 @@ export class TimeViz extends LitElement {
     this.xAxisLabel = "";
   }
 
+  /**
+   * Sets the configuration for the time series visualization.
+   */
   public set config(cfg: TimeVizConfig) {
     this._config = cfg;
     this._data = [...cfg.data];
@@ -284,11 +287,17 @@ export class TimeViz extends LitElement {
     this.requestUpdate();
   }
 
+  /**
+   * Returns the labels for the Y-axis series.
+   */
   public get ySeriesLabels(): string[] {
     if (!this._config?.ySeries?.length) return [];
     return this._config.ySeries.map(({ label }) => label);
   }
 
+  /**
+   * Returns the filtered series based on the selected and hidden series.
+   */
   public get filteredSeries(): TimeVizSeriesConfig[] {
     if (!this._config?.ySeries?.length) return [];
     if (this._selectedSeries === "All") {
@@ -361,28 +370,46 @@ export class TimeViz extends LitElement {
     }
   }
 
+  /**
+   * Handles changes to the selected series.
+   * @param event The change event.
+   */
   #handleSeriesChange = (event: Event): void => {
     const target = event.target as HTMLSelectElement;
     this._selectedSeries = target.value;
   };
 
+  /**
+   * Handles changes to the start date.
+   * @param event The change event.
+   */
   #handleStartDateChange = (event: Event): void => {
     const target = event.target as HTMLInputElement;
     this._startDate = target.value;
   };
 
+  /**
+   * Handles changes to the end date.
+   * @param event The change event.
+   */
   #handleEndDateChange = (event: Event): void => {
     const target = event.target as HTMLInputElement;
     this._endDate = target.value;
   };
 
+  /**
+   * Handles changes to the reset dates.
+   * @returns {void}
+   */
   #handleResetDates = (): void => {
     this._startDate = this._minDate;
     this._endDate = this._maxDate;
   };
 
-
-
+  /**
+   * Renders the chart.
+   * @returns {void}
+   */
   #renderChart(): void {
     if (
       !this.#svgRef.value ||
@@ -410,6 +437,10 @@ export class TimeViz extends LitElement {
     select(this.#svgRef.value).call(chart);
   }
 
+  /**
+   * Renders the time series visualization.
+   * @returns {TemplateResult} The rendered template.
+   */
   public render() {
     const seriesLabels = this.ySeriesLabels;
     const hasData = this._data.length > 0 && this._config.ySeries.length > 0;
