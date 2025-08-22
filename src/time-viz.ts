@@ -34,9 +34,20 @@ export class TimeViz extends LitElement {
 
     .controls {
       display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
       gap: 1rem;
-      align-items: center;
       flex-wrap: wrap;
+    }
+    .controls-left {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .controls-right {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
     }
 
     select {
@@ -406,35 +417,39 @@ export class TimeViz extends LitElement {
     return html`
       <section>
         <div class="controls">
-          <input
-            type="date"
-            .value=${this._startDate}
-            .min=${this._minDate}
-            .max=${this._endDate}
-            @change=${this.#handleStartDateChange}
-            ?disabled=${!hasData}
-          />
-          <input
-            type="date"
-            .value=${this._endDate}
-            .min=${this._startDate}
-            .max=${this._maxDate}
-            @change=${this.#handleEndDateChange}
-            ?disabled=${!hasData}
-          />
-          <button @click=${this.#handleResetDates} ?disabled=${!hasData}>
-            Reset Dates
-          </button>
-          <select
-            @change=${this.#handleSeriesChange}
-            .value=${this._selectedSeries}
-            ?disabled=${!hasData}
-          >
-            <option value="All">All Series</option>
-            ${seriesLabels.map(
-              (label) => html`<option value=${label}>${label}</option>`
-            )}
-          </select>
+          <div class="controls-left">
+            <select
+              @change=${this.#handleSeriesChange}
+              .value=${this._selectedSeries}
+              ?disabled=${!hasData}
+            >
+              <option value="All">All Series</option>
+              ${seriesLabels.map(
+                (label) => html`<option value=${label}>${label}</option>`
+              )}
+            </select>
+          </div>
+          <div class="controls-right">
+            <input
+              type="date"
+              .value=${this._startDate}
+              .min=${this._minDate}
+              .max=${this._endDate}
+              @change=${this.#handleStartDateChange}
+              ?disabled=${!hasData}
+            />
+            <input
+              type="date"
+              .value=${this._endDate}
+              .min=${this._startDate}
+              .max=${this._maxDate}
+              @change=${this.#handleEndDateChange}
+              ?disabled=${!hasData}
+            />
+            <button @click=${this.#handleResetDates} ?disabled=${!hasData}>
+              Reset Dates
+            </button>
+          </div>
         </div>
 
         <figure>
