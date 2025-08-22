@@ -39,11 +39,13 @@ export class TimeViz extends LitElement {
       gap: 1rem;
       flex-wrap: wrap;
     }
+
     .controls-left {
       display: flex;
       align-items: center;
       gap: 1rem;
     }
+
     .controls-right {
       display: flex;
       align-items: center;
@@ -55,7 +57,7 @@ export class TimeViz extends LitElement {
       border: 1px solid #ccc;
       border-radius: 4px;
       background: white;
-      font-size: 14px;
+      font-size: 0.9em;
     }
 
     input[type="date"] {
@@ -63,7 +65,7 @@ export class TimeViz extends LitElement {
       border: 1px solid #ccc;
       border-radius: 4px;
       background: white;
-      font-size: 14px;
+      font-size: 0.9em;
     }
 
     figure {
@@ -84,22 +86,22 @@ export class TimeViz extends LitElement {
     button {
       padding: 0.5rem 1rem;
       border: 1px solid #007acc;
-      border-radius: 4px;
+      border-radius: 0.25em;
       background: #007acc;
       color: white;
       cursor: pointer;
-      font-size: 14px;
+      font-size: 0.9em;
       transition: background-color 0.2s;
-    }
 
-    button:hover {
-      background: #005a9e;
-    }
+      &:hover {
+        background: darken(#007acc, 5%);
+      }
 
-    button:disabled {
-      background: #ccc;
-      border-color: #ccc;
-      cursor: not-allowed;
+      &:disabled {
+        background: #ccc;
+        border-color: #ccc;
+        cursor: not-allowed;
+      }
     }
 
     .chart-title {
@@ -117,10 +119,10 @@ export class TimeViz extends LitElement {
       stroke: #e0e0e0;
       stroke-width: 1;
       stroke-dasharray: 2, 2;
-    }
 
-    .grid path {
+      path {
       stroke-width: 0;
+      }
     }
 
     .series {
