@@ -12,9 +12,10 @@ A web component for visualizing time series data built with Lit and D3.js.
 - ✨ Responsive SVG-based charts using `viewBox` and `preserveAspectRatio`.
 - 📊 Multiple time series support with color-coded lines.
 - 🎯 Interactive cursor tracking (optional).
-- 🔍 Series filtering via dropdown list.
+- 🔍 Series filtering via dropdown list to see one at a time.
 - 📈 Curved or straight line rendering.
 - 🎨 Customizable axes, grid, and formatting via attributes.
+- 🔍 Filter the chart between different time ranges.
 
 ## Usage
 
@@ -35,12 +36,12 @@ npm install time-viz
 
 ```html
 <time-viz
-  chart-title="My Time Series"
-  is-static="false"
   is-curved="true"
   x-ticks="6"
   y-ticks="8"
-></time-viz>
+>
+  <h3 slot="chart-title">Time Series Example</h3>
+</time-viz>
 ```
 
 ### Setting Data
@@ -74,12 +75,11 @@ chart.config = {
 | `is-static` | boolean | `true` | Disable interactivity (cursor tracking, legend clicks) |
 | `transition-time` | number | `0` | Transition duration in milliseconds |
 | `is-curved` | boolean | `false` | Use curved lines instead of straight lines |
-| `margin` | object | `{top: 40, right: 80, bottom: 60, left: 60}` | Chart margins following D3 convention |
+| `margin` | object | `{top: 40, right: 80, bottom: 60, left: 60}` | Chart margins following [D3 convention](https://observablehq.com/@d3/margin-convention) |
 | `x-ticks` | number | `5` | Number of ticks on X-axis |
 | `y-ticks` | number | `5` | Number of ticks on Y-axis |
 | `format-x-axis` | string | `"%Y-%m-%d"` | D3 time format string for X-axis |
 | `format-y-axis` | string | `".2f"` | D3 number format string for Y-axis |
-| `chart-title` | string | `""` | Chart title displayed above the chart |
 
 ## Data Format
 
@@ -116,15 +116,15 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 <table>
   <tr>
     <td align="center">
-      <a href="https://vanjs.org/" target="_blank">
-        <img src="./images/vanjs-logo.png" alt="VanJS" width="42" height="42" /><br/>
-        <b>VanJS</b><br/>
+      <a href="https://d3js.org/" target="_blank">
+        <img src="https://raw.githubusercontent.com/d3/d3-logo/refs/heads/master/d3.svg" alt="D3.js" width="42" height="42" /><br/>
+        <b>D3.js</b><br/>
       </a>
     </td>
     <td align="center">
-      <a href="https://rescript-lang.org/" target="_blank">
-        <img src="./images/rescript-logo.png" alt="ReScript" width="42" height="42" /><br/>
-        <b>ReScript</b><br/>
+      <a href="https://lit.dev/" target="_blank">
+        <img src="https://cdn.worldvectorlogo.com/logos/lit-1.svg" alt="Lit" width="42" height="42" /><br/>
+        <b>Lit</b><br/>
       </a>
     </td>
   </tr>
