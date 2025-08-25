@@ -72,14 +72,84 @@ chart.config = {
 
 | Attribute | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `is-static` | boolean | `true` | Disable interactivity (cursor tracking, legend clicks) |
-| `transition-time` | number | `0` | Transition duration in milliseconds |
-| `is-curved` | boolean | `false` | Use curved lines instead of straight lines |
-| `margin` | object | `{top: 40, right: 80, bottom: 60, left: 60}` | Chart margins following [D3 convention](https://observablehq.com/@d3/margin-convention) |
-| `x-ticks` | number | `5` | Number of ticks on X-axis |
-| `y-ticks` | number | `5` | Number of ticks on Y-axis |
-| `format-x-axis` | string | `"%Y-%m-%d"` | D3 time format string for X-axis |
-| `format-y-axis` | string | `".2f"` | D3 number format string for Y-axis |
+| `is-static` | boolean | `true` | Disables interactivity (cursor tracking, tooltips, legend clicks). Set to `false` for a dynamic chart. |
+| `transition-time` | number | `0` | Transition duration in milliseconds for data updates. |
+| `is-curved` | boolean | `false` | Use curved lines instead of straight lines. |
+| `margin` | object | `{top: 40, right: 80, bottom: 60, left: 60}` | Chart margins following [D3 convention](https://observablehq.com/@d3/margin-convention). |
+| `x-ticks` | number | `5` | Suggested number of ticks on the X-axis. |
+| `y-ticks` | number | `5` | Suggested number of ticks on the Y-axis. |
+| `format-x-axis` | string | `"%Y-%m-%d"` | D3 time format string for X-axis tick labels. |
+| `format-y-axis` | string | `".2f"` | D3 number format string for Y-axis tick labels. |
+| `x-axis-label` | string | `""` | Text label for the X-axis. |
+| `y-axis-label` | string | `""` | Text label for the Y-axis. |
+
+## API and Usage
+
+### `config` Setter
+
+The primary way to set data and define series for the chart.
+
+```javascript
+const chart = document.querySelector("time-viz");
+chart.config = {
+  data: [
+    { date: new Date("2023-01-01"), revenue: 100, profit: 60 },
+    { date: new Date("2023-01-02"), revenue: 120, profit: 75 },
+    { date: new Date("2023-01-03"), revenue: 80, profit: 50 },
+    { date: new Date("2023-01-04"), revenue: 95, profit: 55 },
+  ],
+  xSerie: {
+    accessor: (d) => d.date, // Function to access the date object
+  },
+  ySeries: [{
+    accessor: (d) => d.revenue, // Function to access the value for this series
+    label: "Revenue",
+  }, {
+    accessor: (d) => d.profit,
+    label: "Profit",
+  }],
+};
+```
+
+### Methods
+
+#### `tooltipContent(content: (data: ChartDataRow) => string)`
+
+Customizes the HTML content of the tooltip that appears when hovering over a data point.
+
+```javascript
+chart.tooltipContent((d) => `
+  <strong>Date:</strong> ${d.date.toLocaleDateString()}<br/>
+  <strong>Revenue:</strong> ${d.revenue.toFixed(2)}
+`);
+```
+
+#### `tooltipStyle(css: string)`
+
+Applies custom CSS to the tooltip element.
+
+```javascript
+chart.tooltipStyle(`
+  background-color: #333;
+  color: white;
+  border-radius: 8px;
+  padding: 8px 12px;
+`);
+```
+
+### Slots
+
+| Name | Description |
+|------|-------------|
+| `chart-title` | Allows you to place an element, like an `<h3>`, to serve as the chart's title. |
+
+## Interactive Features
+
+When `is-dynamic` is `true` (the default):
+
+- A vertical cursor line follows the mouse pointer over the chart area.
+- Data points are highlighted as the cursor passes over them.
+- A tooltip appears near the highlighted data point.
 
 ## Data Format
 
@@ -92,20 +162,6 @@ interface TimeSeriesDataPoint {
   series?: string;      // Optional series name (defaults to "default")
 }
 ```
-
-## Component Features
-
-### Multiple Series
-
-Different series are automatically color-coded using D3's category color scheme. Series can be filtered using the dropdown control.
-
-### Interactive Mode
-
-When `is-static="false"`:
-
-- Cursor line follows mouse movement
-- Points highlight at cursor position
-- Legend items can be clicked to hide/show series
 
 ## Contributing
 
