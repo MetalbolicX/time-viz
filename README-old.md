@@ -188,30 +188,3 @@ To build and run your ReScript application, see the [Compile and Run](https://me
 
 1.
 2.
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## Technologies used
-
-<table>
-  <tr>
-    <td align="center">
-      <a href="https://vanjs.org/" target="_blank">
-        <img src="./images/vanjs-logo.png" alt="VanJS" width="42" height="42" /><br/>
-        <b>VanJS</b><br/>
-      </a>
-    </td>
-    <td align="center">
-      <a href="https://rescript-lang.org/" target="_blank">
-        <img src="./images/rescript-logo.png" alt="ReScript" width="42" height="42" /><br/>
-        <b>ReScript</b><br/>
-      </a>
-    </td>
-  </tr>
-</table>
-
-## License
-
-Released under [MIT](/LICENSE) by [@MetalbolicX](https://github.com/MetalbolicX).

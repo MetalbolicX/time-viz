@@ -1,6 +1,11 @@
 # Time Viz Component
 
-A web component for visualizing time series data built with Lit 3 and D3.js v7.
+A web component for visualizing time series data built with Lit and D3.js.
+
+**Supported Versions:**
+
+![D3.js](https://img.shields.io/badge/D3.js->=7.9.0-blue)
+![Lit](https://img.shields.io/badge/Lit->=3.3.1-blue)
 
 ## Features
 
@@ -102,6 +107,29 @@ When `is-static="false"`:
 - Points highlight at cursor position
 - Legend items can be clicked to hide/show series
 
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## Technologies used
+
+<table>
+  <tr>
+    <td align="center">
+      <a href="https://vanjs.org/" target="_blank">
+        <img src="./images/vanjs-logo.png" alt="VanJS" width="42" height="42" /><br/>
+        <b>VanJS</b><br/>
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://rescript-lang.org/" target="_blank">
+        <img src="./images/rescript-logo.png" alt="ReScript" width="42" height="42" /><br/>
+        <b>ReScript</b><br/>
+      </a>
+    </td>
+  </tr>
+</table>
+
 ## License
 
-MIT
+Released under [MIT](/LICENSE) by [@MetalbolicX](https://github.com/MetalbolicX).
