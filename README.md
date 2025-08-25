@@ -119,10 +119,12 @@ Customizes the HTML content of the tooltip that appears when hovering over a dat
 
 ```javascript
 chart.tooltipContent((d) => `
-  <strong>Date:</strong> ${d.date.toLocaleDateString()}<br/>
-  <strong>Revenue:</strong> ${d.revenue.toFixed(2)}
+  <strong>Date:</strong> ${d.x.toLocaleDateString()}<br/>
+  <strong>Value:</strong> ${d.y.toFixed(2)}
 `);
 ```
+
+**⚠️ Warning**: To make the tooltip work correctly, ensure that the `x` and `y` properties are set in the data.
 
 #### `tooltipStyle(css: string)`
 
@@ -145,23 +147,11 @@ chart.tooltipStyle(`
 
 ## Interactive Features
 
-When `is-dynamic` is `true` (the default):
+When `is-static` is `false` (the default):
 
 - A vertical cursor line follows the mouse pointer over the chart area.
 - Data points are highlighted as the cursor passes over them.
 - A tooltip appears near the highlighted data point.
-
-## Data Format
-
-The `data` property accepts an array of objects with the following structure:
-
-```typescript
-interface TimeSeriesDataPoint {
-  date: Date;           // The time point
-  value: number;        // The numeric value
-  series?: string;      // Optional series name (defaults to "default")
-}
-```
 
 ## Contributing
 
