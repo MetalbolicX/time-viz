@@ -4,21 +4,26 @@ A web component for visualizing time series data built with Lit 3 and D3.js v7.
 
 ## Features
 
-- ✨ Responsive SVG-based charts using `viewBox` and `preserveAspectRatio`
-- 📊 Multiple time series support with color-coded lines
-- 🎯 Interactive cursor tracking (optional)
-- 🔍 Series filtering via dropdown
-- 📈 Curved or straight line rendering
-- 🎨 Customizable axes, grid, and formatting
-- 📄 SVG export functionality
-- ♿ Semantic HTML and accessibility features
+- ✨ Responsive SVG-based charts using `viewBox` and `preserveAspectRatio`.
+- 📊 Multiple time series support with color-coded lines.
+- 🎯 Interactive cursor tracking (optional).
+- 🔍 Series filtering via dropdown list.
+- 📈 Curved or straight line rendering.
+- 🎨 Customizable axes, grid, and formatting via attributes.
 
 ## Usage
 
-### Installation
+### Installation from npm
 
 ```bash
 npm install time-viz
+```
+
+### Installation via CDN
+
+```html
+<script src="https://unpkg.com/d3@7"></script>
+<script type="module" src="https://unpkg.com/time-viz"></script>
 ```
 
 ### Basic Usage
@@ -36,13 +41,25 @@ npm install time-viz
 ### Setting Data
 
 ```javascript
-const chart = document.querySelector('time-viz');
-chart.data = [
-  { date: new Date('2023-01-01'), value: 100, series: 'Sales' },
-  { date: new Date('2023-01-02'), value: 120, series: 'Sales' },
-  { date: new Date('2023-01-01'), value: 80, series: 'Revenue' },
-  { date: new Date('2023-01-02'), value: 95, series: 'Revenue' },
+const data = [
+  { date: new Date("2023-01-01"), revenue: 100 },
+  { date: new Date("2023-01-02"), revenue: 120 },
+  { date: new Date("2023-01-03"), revenue: 80 },
+  { date: new Date("2023-01-04"), revenue: 95 },
 ];
+
+const chart = document.querySelector("time-viz");
+chart.config = {
+  data,
+  xSerie: {
+    accessor: (d) => d.date,
+    label: "Date",
+  },
+  ySeries: [{
+    accessor: (d) => d.revenue,
+    label: "Revenue",
+  }],
+};
 ```
 
 ## Attributes
@@ -84,29 +101,6 @@ When `is-static="false"`:
 - Cursor line follows mouse movement
 - Points highlight at cursor position
 - Legend items can be clicked to hide/show series
-
-### Responsive Design
-
-The component uses SVG with `viewBox` for automatic scaling and maintains aspect ratio across different container sizes.
-
-### Accessibility
-
-- Semantic HTML structure with `<figure>` and proper ARIA labels
-- Keyboard accessible controls
-- Screen reader friendly
-
-## Development
-
-```bash
-# Install dependencies
-pnpm install
-
-# Start development server
-pnpm dev
-
-# Build for production
-pnpm build
-```
 
 ## License
 
