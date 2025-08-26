@@ -1,7 +1,4 @@
-import { LitElement, html, css } from "lit";
-import { customElement, property, query, state } from "lit/decorators.js";
-import { createRef, ref } from "lit/directives/ref.js";
-import { select, scaleOrdinal, schemeCategory10, style } from "d3";
+import { select, scaleOrdinal, schemeCategory10 } from "d3";
 import type {
   TimeVizConfig,
   TimeVizSeriesConfig,
@@ -12,235 +9,220 @@ import { createTimeVizChart } from "./d3-time-viz";
 import "tipviz";
 import { TipVizTooltip } from "tipviz";
 
-@customElement("time-viz")
-export class TimeViz extends LitElement {
-  public static styles = css`
-    :host {
-      display: block;
-      width: 100%;
-      height: 100%;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-        sans-serif;
-    }
+const style = /*css*/ `
+:host {
+  display: block;
+  width: 100%;
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    sans-serif;
+}
 
-    section {
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-      gap: 1rem;
-      padding: 1rem;
-      box-sizing: border-box;
-    }
+section {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  gap: 1rem;
+  padding: 1rem;
+  box-sizing: border-box;
+}
 
-    .controls {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 1rem;
-      flex-wrap: wrap;
-    }
+.controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
 
-    .controls-left {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-    }
+.controls-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
 
-    .controls-right {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
+.controls-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
 
-    select {
-      padding: 0.5rem;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      background: white;
-      font-size: 0.9em;
-    }
+select {
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: white;
+  font-size: 0.9em;
+}
 
-    input[type="date"] {
-      padding: 0.4rem;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      background: white;
-      font-size: 0.9em;
-    }
+input[type="date"] {
+  padding: 0.4rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: white;
+  font-size: 0.9em;
+}
 
-    figure {
-      flex: 1;
-      margin: 0;
-      display: flex;
-      flex-direction: column;
-      min-height: 0;
-    }
+figure {
+  flex: 1;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
 
-    svg {
-      width: 100%;
-      height: 100%;
-      border: 1px solid #e0e0e0;
-      background: white;
-    }
+svg {
+  width: 100%;
+  height: 100%;
+  border: 1px solid #e0e0e0;
+  background: white;
+}
 
-    button {
-      padding: 0.5rem 1rem;
-      border: 1px solid #007acc;
-      border-radius: 0.25em;
-      background: #007acc;
-      color: white;
-      cursor: pointer;
-      font-size: 0.9em;
-      transition: background-color 0.2s;
+button {
+  padding: 0.5rem 1rem;
+  border: 1px solid #007acc;
+  border-radius: 0.25em;
+  background: #007acc;
+  color: white;
+  cursor: pointer;
+  font-size: 0.9em;
+  transition: background-color 0.2s;
+}
 
-      &:hover {
-        background: darken(#007acc, 5%);
-      }
+button:hover {
+    background: darken(#007acc, 5%);
+}
 
-      &:disabled {
-        background: #ccc;
-        border-color: #ccc;
-        cursor: not-allowed;
-      }
-    }
+button:disabled {
+    background: #ccc;
+    border-color: #ccc;
+    cursor: not-allowed;
+}
 
-    .chart-title {
-      text-align: center;
-      margin: 0 0 1rem 0;
-      font-size: 1.2rem;
-      font-weight: 600;
-    }
+.chart-title {
+  text-align: center;
+  margin: 0 0 1rem 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
 
-    .axis {
-      font-size: 0.7em;
-    }
+.axis {
+  font-size: 0.7em;
+}
 
-    .grid {
-      stroke: #e0e0e0;
-      stroke-width: 1;
-      stroke-dasharray: 2, 2;
+.grid {
+  stroke: #e0e0e0;
+  stroke-width: 1;
+  stroke-dasharray: 2, 2;
+}
 
-      path {
-      stroke-width: 0;
-      }
-    }
+.grid path {
+  stroke-width: 0;
+}
 
-    .series {
-      opacity: 0.6;
-      transition: opacity 0.3s;
+.series {
+  opacity: 0.6;
+  transition: opacity 0.3s;
+}
 
-      .serie {
-        fill: none;
-        stroke-width: 2;
-      }
+.series .serie {
+    fill: none;
+    stroke-width: 2;
+}
 
-      &:has(.serie:hover, .point:hover) .series-group:not(:hover) {
-        opacity: 0.3;
-      }
+.series:has(.serie:hover, .point:hover) .series-group:not(:hover) {
+    opacity: 0.3;
+}
 
-      &:has(.serie:hover, .point:hover) .series-group:hover {
-        opacity: 1;
+.series:has(.serie:hover, .point:hover) .series-group:hover {
+    opacity: 1;
+}
 
-        .serie {
-          stroke-width: 4;
-        }
-      }
-    }
+.series:has(.serie:hover, .point:hover) .series-group:hover .serie {
+      stroke-width: 4;
+}
 
-    .cursor {
+.cursor.hidden {
+    visibility: hidden;
+}
 
-      &.hidden {
-        visibility: hidden;
-      }
+.cursor.point {
+    fill: white;
+    stroke-width: 2;
+}
 
-      &.point {
-        fill: white;
-        stroke-width: 2;
-      }
+.cursor.vertical-line {
+    stroke: #666;
+    stroke-width: 1;
+    stroke-dasharray: 3, 3;
+    pointer-events: none;
+}
 
-      &.vertical-line {
-        stroke: #666;
-        stroke-width: 1;
-        stroke-dasharray: 3, 3;
-        pointer-events: none;
-      }
-    }
+.legend-item {
+  pointer-events: none;
+}
 
-    .legend-item {
-      pointer-events: none;
+.legend-item text {
+    font-size: 0.8em;
+}
 
-      text {
-        font-size: 0.8em;
-      }
+.legend-item rect {
+    width: 1em;
+    height: 1em;
+    display: inline-block;
+    margin-right: 0.5rem;
+}
 
-      rect {
-        width: 1em;
-        height: 1em;
-        display: inline-block;
-        margin-right: 0.5rem;
-      }
-    }
+.axis-label {
+  font-size: 0.8em;
+  text-anchor: middle;
+}
+`;
 
-    .axis-label {
-      font-size: 0.8em;
-      text-anchor: middle;
-    }
-  `;
+export class TimeViz extends HTMLElement {
+  private declare isStatic: boolean;
+  private declare transitionTime: number;
+  private declare isCurved: boolean;
+  private declare margin: MarginConfig;
+  private declare xTicks: number;
+  private declare yTicks: number;
+  private declare formatXAxis: string;
+  private declare formatYAxis: string;
+  private declare yAxisLabel: string;
+  private declare xAxisLabel: string;
 
-  @property({ type: Boolean, attribute: "is-static" })
-  declare isStatic: boolean;
-
-  @property({ type: Number, attribute: "transition-time" })
-  declare transitionTime: number;
-
-  @property({ type: Boolean, attribute: "is-curved" })
-  declare isCurved: boolean;
-
-  @property({ type: Object })
-  declare margin: MarginConfig;
-
-  @property({ type: Number, attribute: "x-ticks" })
-  declare xTicks: number;
-
-  @property({ type: Number, attribute: "y-ticks" })
-  declare yTicks: number;
-
-  @property({ type: String, attribute: "format-x-axis" })
-  declare formatXAxis: string;
-
-  @property({ type: String, attribute: "format-y-axis" })
-  declare formatYAxis: string;
-
-  @property({ type: String, attribute: "y-axis-label" })
-  declare yAxisLabel: string;
-
-  @property({ type: String, attribute: "x-axis-label" })
-  declare xAxisLabel: string;
-
-  @state()
   private declare _config: TimeVizConfig;
-  @state()
   private declare _data: ChartDataRow[];
-  @state()
   private declare _selectedSeries: string;
-  @state()
   private declare _hiddenSeries: Set<string>;
-  @state()
   private declare _startDate: string;
-  @state()
   private declare _endDate: string;
-  @state()
   private declare _minDate: string;
-  @state()
   private declare _maxDate: string;
 
-  #svgRef = createRef<SVGElement>();
+  #svgRef!: SVGElement;
   #colorScale = scaleOrdinal(schemeCategory10);
-  @query("#d3-tooltip")
   private declare _tooltip: TipVizTooltip;
+  #shadowRoot: ShadowRoot;
+
+  public static get observedAttributes() {
+    return [
+      "is-static",
+      "transition-time",
+      "is-curved",
+      "margin",
+      "x-ticks",
+      "y-ticks",
+      "format-x-axis",
+      "format-y-axis",
+      "y-axis-label",
+      "x-axis-label",
+    ];
+  }
 
   constructor() {
     super();
+    this.#shadowRoot = this.attachShadow({ mode: "open" });
     this.isStatic = false;
     this.transitionTime = 0;
     this.isCurved = false;
@@ -265,6 +247,53 @@ export class TimeViz extends LitElement {
     this.xAxisLabel = "";
   }
 
+  connectedCallback() {
+    this.render();
+  }
+
+  attributeChangedCallback(name: string, oldValue: string, newValue: string) {
+    if (oldValue === newValue) {
+      return;
+    }
+    switch (name) {
+      case "is-static":
+        this.isStatic = newValue !== null;
+        break;
+      case "transition-time":
+        this.transitionTime = Number(newValue);
+        break;
+      case "is-curved":
+        this.isCurved = newValue !== null;
+        break;
+      case "margin":
+        try {
+          this.margin = JSON.parse(newValue);
+        } catch (e) {
+          console.error("Failed to parse margin attribute:", e);
+        }
+        break;
+      case "x-ticks":
+        this.xTicks = Number(newValue);
+        break;
+      case "y-ticks":
+        this.yTicks = Number(newValue);
+        break;
+      case "format-x-axis":
+        this.formatXAxis = newValue;
+        break;
+      case "format-y-axis":
+        this.formatYAxis = newValue;
+        break;
+      case "y-axis-label":
+        this.yAxisLabel = newValue;
+        break;
+      case "x-axis-label":
+        this.xAxisLabel = newValue;
+        break;
+    }
+    this.#renderChart();
+  }
+
   /**
    * Sets the configuration for the time series visualization.
    */
@@ -286,7 +315,8 @@ export class TimeViz extends LitElement {
       this._endDate = this._maxDate;
     }
 
-    this.requestUpdate();
+    this.render();
+    this.#renderChart();
   }
 
   /**
@@ -358,20 +388,6 @@ export class TimeViz extends LitElement {
     this._tooltip.setStyles(css);
   }
 
-  protected updated(
-    changedProperties: Map<string | number | symbol, unknown>
-  ): void {
-    if (
-      changedProperties.has("_selectedSeries") ||
-      changedProperties.has("_hiddenSeries") ||
-      changedProperties.has("_config") ||
-      changedProperties.has("_startDate") ||
-      changedProperties.has("_endDate")
-    ) {
-      this.#renderChart();
-    }
-  }
-
   /**
    * Handles changes to the selected series.
    * @param event The change event.
@@ -379,6 +395,7 @@ export class TimeViz extends LitElement {
   #handleSeriesChange = (event: Event): void => {
     const target = event.target as HTMLSelectElement;
     this._selectedSeries = target.value;
+    this.#renderChart();
   };
 
   /**
@@ -388,6 +405,8 @@ export class TimeViz extends LitElement {
   #handleStartDateChange = (event: Event): void => {
     const target = event.target as HTMLInputElement;
     this._startDate = target.value;
+    this.render();
+    this.#renderChart();
   };
 
   /**
@@ -397,6 +416,8 @@ export class TimeViz extends LitElement {
   #handleEndDateChange = (event: Event): void => {
     const target = event.target as HTMLInputElement;
     this._endDate = target.value;
+    this.render();
+    this.#renderChart();
   };
 
   /**
@@ -406,6 +427,8 @@ export class TimeViz extends LitElement {
   #handleResetDates = (): void => {
     this._startDate = this._minDate;
     this._endDate = this._maxDate;
+    this.render();
+    this.#renderChart();
   };
 
   /**
@@ -413,11 +436,7 @@ export class TimeViz extends LitElement {
    * @returns {void}
    */
   #renderChart(): void {
-    if (
-      !this.#svgRef.value ||
-      !this._data.length ||
-      !this._config.ySeries.length
-    )
+    if (!this.#svgRef || !this._data.length || !this._config.ySeries.length)
       return;
     const chart = createTimeVizChart()
       .colorScale(this.#colorScale)
@@ -436,50 +455,59 @@ export class TimeViz extends LitElement {
       .yAxisLabel(this.yAxisLabel)
       .yTicks(this.yTicks);
 
-    select(this.#svgRef.value).call(chart);
+    select(this.#svgRef).call(chart);
+  }
+
+  #fromString(html: string) {
+    const range = document.createRange();
+    const fragment = range.createContextualFragment(html);
+    return fragment;
   }
 
   /**
    * Renders the time series visualization.
-   * @returns {TemplateResult} The rendered template.
+   * @returns {void} The rendered template.
    */
   public render() {
+    this.#shadowRoot.innerHTML = "";
     const seriesLabels = this.ySeriesLabels;
     const hasData = this._data.length > 0 && this._config.ySeries.length > 0;
 
-    return html`
+    const template = this.#fromString(/*html*/ `
+      <style>${style}</style>
       <section>
         <div class="controls">
           <div class="controls-left">
             <select
-              @change=${this.#handleSeriesChange}
-              .value=${this._selectedSeries}
-              ?disabled=${!hasData}
+              ${!hasData ? "disabled" : ""}
             >
               <option value="All">All Series</option>
-              ${seriesLabels.map(
-                (label) => html`<option value=${label}>${label}</option>`
-              )}
+              ${seriesLabels
+                .map(
+                  (label) =>
+                    `<option value="${label}" ${
+                      this._selectedSeries === label ? "selected" : ""
+                    }>${label}</option>`
+                )
+                .join("")}
             </select>
           </div>
           <div class="controls-right">
             <input
               type="date"
-              .value=${this._startDate}
-              .min=${this._minDate}
-              .max=${this._endDate}
-              @change=${this.#handleStartDateChange}
-              ?disabled=${!hasData}
+              value=${this._startDate}
+              min=${this._minDate}
+              max=${this._endDate}
+              ${!hasData ? "disabled" : ""}
             />
             <input
               type="date"
-              .value=${this._endDate}
-              .min=${this._startDate}
-              .max=${this._maxDate}
-              @change=${this.#handleEndDateChange}
-              ?disabled=${!hasData}
+              value=${this._endDate}
+              min=${this._startDate}
+              max=${this._maxDate}
+              ${!hasData ? "disabled" : ""}
             />
-            <button @click=${this.#handleResetDates} ?disabled=${!hasData}>
+            <button ${!hasData ? "disabled" : ""}>
               Reset Dates
             </button>
           </div>
@@ -488,7 +516,6 @@ export class TimeViz extends LitElement {
         <figure>
           <slot name="chart-title" class="chart-title"></slot>
           <svg
-            ${ref(this.#svgRef)}
             preserveAspectRatio="xMidYMid meet"
             role="img"
             aria-label="Time Series Chart"
@@ -498,9 +525,33 @@ export class TimeViz extends LitElement {
         </figure>
         <tip-viz-tooltip id="d3-tooltip" transition-time="250"></tip-viz-tooltip>
       </section>
-    `;
+    `);
+
+    this.#shadowRoot.appendChild(template);
+    this.#svgRef = this.#shadowRoot.querySelector("svg") as SVGElement;
+    this._tooltip = this.#shadowRoot.querySelector(
+      "#d3-tooltip"
+    ) as TipVizTooltip;
+
+    const selectElement = this.#shadowRoot.querySelector(
+      "select"
+    ) as HTMLSelectElement;
+    selectElement.addEventListener("change", this.#handleSeriesChange);
+
+    const [startDateInput, endDateInput] = this.#shadowRoot.querySelectorAll(
+      "input[type='date']"
+    ) as NodeListOf<HTMLInputElement>;
+    startDateInput.addEventListener("change", this.#handleStartDateChange);
+    endDateInput.addEventListener("change", this.#handleEndDateChange);
+
+    const resetButton = this.#shadowRoot.querySelector(
+      "button"
+    ) as HTMLButtonElement;
+    resetButton.addEventListener("click", this.#handleResetDates);
   }
 }
+
+customElements.define("time-viz", TimeViz);
 
 declare global {
   interface HTMLElementTagNameMap {
