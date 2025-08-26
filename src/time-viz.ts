@@ -34,6 +34,10 @@ export class TimeViz extends HTMLElement {
   #colorScale = scaleOrdinal(schemeCategory10);
   private declare _tooltip: TipVizTooltip;
   #shadowRoot: ShadowRoot;
+  #selectElement!: HTMLSelectElement;
+  #startDateInput!: HTMLInputElement;
+  #endDateInput!: HTMLInputElement;
+  #resetButton!: HTMLButtonElement;
 
   public static get observedAttributes() {
     return [
@@ -247,13 +251,20 @@ export class TimeViz extends HTMLElement {
     };
     this.yAxisLabel = "";
     this.xAxisLabel = "";
+
+    this.#createDOM();
   }
 
-  connectedCallback() {
+  public connectedCallback() {
+    this.#addEventListeners();
     this.render();
   }
 
-  attributeChangedCallback(name: string, oldValue: string, newValue: string) {
+  public disconnectedCallback() {
+    this.#removeEventListeners();
+  }
+
+  public attributeChangedCallback(name: string, oldValue: string, newValue: string) {
     if (oldValue === newValue) {
       return;
     }
@@ -293,7 +304,7 @@ export class TimeViz extends HTMLElement {
         this.xAxisLabel = newValue;
         break;
     }
-    this.#renderChart();
+    this.render();
   }
 
   /**
@@ -318,7 +329,6 @@ export class TimeViz extends HTMLElement {
     }
 
     this.render();
-    this.#renderChart();
   }
 
   /**
@@ -408,7 +418,6 @@ export class TimeViz extends HTMLElement {
     const target = event.target as HTMLInputElement;
     this._startDate = target.value;
     this.render();
-    this.#renderChart();
   };
 
   /**
@@ -419,7 +428,6 @@ export class TimeViz extends HTMLElement {
     const target = event.target as HTMLInputElement;
     this._endDate = target.value;
     this.render();
-    this.#renderChart();
   };
 
   /**
@@ -430,7 +438,6 @@ export class TimeViz extends HTMLElement {
     this._startDate = this._minDate;
     this._endDate = this._maxDate;
     this.render();
-    this.#renderChart();
   };
 
   /**
@@ -466,52 +473,23 @@ export class TimeViz extends HTMLElement {
     return fragment;
   }
 
-  /**
-   * Renders the time series visualization.
-   * @returns {void} The rendered template.
-   */
-  public render() {
-    this.#shadowRoot.innerHTML = "";
-    const seriesLabels = this.ySeriesLabels;
-    const hasData = this._data.length > 0 && this._config.ySeries.length > 0;
+  #createDOM() {
+    const styleSheet = new CSSStyleSheet();
+    styleSheet.replaceSync(TimeViz.styles);
+    this.#shadowRoot.adoptedStyleSheets = [styleSheet];
 
     const template = this.#fromString(/*html*/ `
-      <style>${TimeViz.styles}</style>
       <section>
         <div class="controls">
           <div class="controls-left">
-            <select
-              ${!hasData ? "disabled" : ""}
-            >
+            <select>
               <option value="All">All Series</option>
-              ${seriesLabels
-                .map(
-                  (label) =>
-                    `<option value="${label}" ${
-                      this._selectedSeries === label ? "selected" : ""
-                    }>${label}</option>`
-                )
-                .join("")}
             </select>
           </div>
           <div class="controls-right">
-            <input
-              type="date"
-              value=${this._startDate}
-              min=${this._minDate}
-              max=${this._endDate}
-              ${!hasData ? "disabled" : ""}
-            />
-            <input
-              type="date"
-              value=${this._endDate}
-              min=${this._startDate}
-              max=${this._maxDate}
-              ${!hasData ? "disabled" : ""}
-            />
-            <button ${!hasData ? "disabled" : ""}>
-              Reset Dates
-            </button>
+            <input type="date" />
+            <input type="date" />
+            <button>Reset Dates</button>
           </div>
         </div>
 
@@ -530,26 +508,85 @@ export class TimeViz extends HTMLElement {
     `);
 
     this.#shadowRoot.appendChild(template);
+
     this.#svgRef = this.#shadowRoot.querySelector("svg") as SVGElement;
     this._tooltip = this.#shadowRoot.querySelector(
       "#d3-tooltip"
     ) as TipVizTooltip;
-
-    const selectElement = this.#shadowRoot.querySelector(
+    this.#selectElement = this.#shadowRoot.querySelector(
       "select"
     ) as HTMLSelectElement;
-    selectElement.addEventListener("change", this.#handleSeriesChange);
-
     const [startDateInput, endDateInput] = this.#shadowRoot.querySelectorAll(
       "input[type='date']"
     ) as NodeListOf<HTMLInputElement>;
-    startDateInput.addEventListener("change", this.#handleStartDateChange);
-    endDateInput.addEventListener("change", this.#handleEndDateChange);
-
-    const resetButton = this.#shadowRoot.querySelector(
+    this.#startDateInput = startDateInput;
+    this.#endDateInput = endDateInput;
+    this.#resetButton = this.#shadowRoot.querySelector(
       "button"
     ) as HTMLButtonElement;
-    resetButton.addEventListener("click", this.#handleResetDates);
+  }
+
+  #addEventListeners() {
+    this.#selectElement.addEventListener("change", this.#handleSeriesChange);
+    this.#startDateInput.addEventListener("change", this.#handleStartDateChange);
+    this.#endDateInput.addEventListener("change", this.#handleEndDateChange);
+    this.#resetButton.addEventListener("click", this.#handleResetDates);
+  }
+
+  #removeEventListeners() {
+    this.#selectElement.removeEventListener("change", this.#handleSeriesChange);
+    this.#startDateInput.removeEventListener(
+      "change",
+      this.#handleStartDateChange
+    );
+    this.#endDateInput.removeEventListener("change", this.#handleEndDateChange);
+    this.#resetButton.removeEventListener("click", this.#handleResetDates);
+  }
+
+  /**
+   * Renders the time series visualization.
+   * @returns {void} The rendered template.
+   */
+  public render() {
+    const seriesLabels = this.ySeriesLabels;
+    const hasData = this._data.length > 0 && this._config.ySeries.length > 0;
+
+    // Update select options
+    while (this.#selectElement.firstChild) {
+      this.#selectElement.removeChild(this.#selectElement.firstChild);
+    }
+    const allOption = document.createElement("option");
+    allOption.value = "All";
+    allOption.textContent = "All Series";
+    if (this._selectedSeries === "All") {
+      allOption.selected = true;
+    }
+    const optionElements = seriesLabels.map((label) => {
+      const option = document.createElement("option");
+      option.value = label;
+      option.textContent = label;
+      if (this._selectedSeries === label) {
+      option.selected = true;
+      }
+      return option;
+    });
+    this.#selectElement.append(allOption, ...optionElements);
+
+    // Update controls state
+    this.#selectElement.disabled = !hasData;
+    this.#startDateInput.disabled = !hasData;
+    this.#endDateInput.disabled = !hasData;
+    this.#resetButton.disabled = !hasData;
+
+    // Update date input values
+    this.#startDateInput.value = this._startDate;
+    this.#startDateInput.min = this._minDate;
+    this.#startDateInput.max = this._endDate;
+    this.#endDateInput.value = this._endDate;
+    this.#endDateInput.min = this._startDate;
+    this.#endDateInput.max = this._maxDate;
+
+    this.#renderChart();
   }
 }
 
