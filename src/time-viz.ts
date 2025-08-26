@@ -55,7 +55,7 @@ export class TimeViz extends HTMLElement {
   }
 
   public static get styles(): string {
-    return /*css*/`
+    return /*css*/ `
   :host {
     display: block;
     width: 100%;
@@ -255,16 +255,33 @@ export class TimeViz extends HTMLElement {
     this.#createDOM();
   }
 
+  /**
+   * Called when the element is connected to the DOM.
+   */
   public connectedCallback() {
     this.#addEventListeners();
     this.render();
   }
 
+  /**
+   * Called when the element is disconnected from the DOM.
+   */
   public disconnectedCallback() {
     this.#removeEventListeners();
   }
 
-  public attributeChangedCallback(name: string, oldValue: string, newValue: string) {
+  /**
+   * Called when an observed attribute is changed.
+   * @param name - The name of the attribute that changed.
+   * @param oldValue - The old value of the attribute.
+   * @param newValue - The new value of the attribute.
+   * @returns {void}
+   */
+  public attributeChangedCallback(
+    name: string,
+    oldValue: string,
+    newValue: string
+  ): void {
     if (oldValue === newValue) {
       return;
     }
@@ -355,6 +372,9 @@ export class TimeViz extends HTMLElement {
     );
   }
 
+  /**
+   * Returns the filtered data based on the selected series and date range.
+   */
   public get filteredData(): ChartDataRow[] {
     if (!this._data.length || !this._startDate || !this._endDate) return [];
     const startDate = new Date(this._startDate);
@@ -467,12 +487,20 @@ export class TimeViz extends HTMLElement {
     select(this.#svgRef).call(chart);
   }
 
-  #fromString(html: string) {
+  /**
+   * Creates a DocumentFragment from an HTML string.
+   * @param html - The HTML string to convert.
+   * @returns A DocumentFragment containing the parsed HTML.
+   */
+  #fromString(html: string): DocumentFragment {
     const range = document.createRange();
     const fragment = range.createContextualFragment(html);
     return fragment;
   }
 
+  /**
+   * Creates the DOM elements for the component.
+   */
   #createDOM() {
     const styleSheet = new CSSStyleSheet();
     styleSheet.replaceSync(TimeViz.styles);
@@ -492,7 +520,6 @@ export class TimeViz extends HTMLElement {
             <button>Reset Dates</button>
           </div>
         </div>
-
         <figure>
           <slot name="chart-title" class="chart-title"></slot>
           <svg
@@ -526,14 +553,25 @@ export class TimeViz extends HTMLElement {
     ) as HTMLButtonElement;
   }
 
-  #addEventListeners() {
+  /**
+   * Adds event listeners for the component.
+   * @returns {void}
+   */
+  #addEventListeners(): void {
     this.#selectElement.addEventListener("change", this.#handleSeriesChange);
-    this.#startDateInput.addEventListener("change", this.#handleStartDateChange);
+    this.#startDateInput.addEventListener(
+      "change",
+      this.#handleStartDateChange
+    );
     this.#endDateInput.addEventListener("change", this.#handleEndDateChange);
     this.#resetButton.addEventListener("click", this.#handleResetDates);
   }
 
-  #removeEventListeners() {
+  /**
+   * Removes event listeners for the component.
+   * @returns {void}
+   */
+  #removeEventListeners(): void {
     this.#selectElement.removeEventListener("change", this.#handleSeriesChange);
     this.#startDateInput.removeEventListener(
       "change",
@@ -566,7 +604,7 @@ export class TimeViz extends HTMLElement {
       option.value = label;
       option.textContent = label;
       if (this._selectedSeries === label) {
-      option.selected = true;
+        option.selected = true;
       }
       return option;
     });
