@@ -9,176 +9,6 @@ import { createTimeVizChart } from "./d3-time-viz";
 import "tipviz";
 import { TipVizTooltip } from "tipviz";
 
-const style = /*css*/ `
-:host {
-  display: block;
-  width: 100%;
-  height: 100%;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    sans-serif;
-}
-
-section {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  gap: 1rem;
-  padding: 1rem;
-  box-sizing: border-box;
-}
-
-.controls {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-.controls-left {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.controls-right {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-select {
-  padding: 0.5rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  background: white;
-  font-size: 0.9em;
-}
-
-input[type="date"] {
-  padding: 0.4rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  background: white;
-  font-size: 0.9em;
-}
-
-figure {
-  flex: 1;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-}
-
-svg {
-  width: 100%;
-  height: 100%;
-  border: 1px solid #e0e0e0;
-  background: white;
-}
-
-button {
-  padding: 0.5rem 1rem;
-  border: 1px solid #007acc;
-  border-radius: 0.25em;
-  background: #007acc;
-  color: white;
-  cursor: pointer;
-  font-size: 0.9em;
-  transition: background-color 0.2s;
-}
-
-button:hover {
-    background: darken(#007acc, 5%);
-}
-
-button:disabled {
-    background: #ccc;
-    border-color: #ccc;
-    cursor: not-allowed;
-}
-
-.chart-title {
-  text-align: center;
-  margin: 0 0 1rem 0;
-  font-size: 1.2rem;
-  font-weight: 600;
-}
-
-.axis {
-  font-size: 0.7em;
-}
-
-.grid {
-  stroke: #e0e0e0;
-  stroke-width: 1;
-  stroke-dasharray: 2, 2;
-}
-
-.grid path {
-  stroke-width: 0;
-}
-
-.series {
-  opacity: 0.6;
-  transition: opacity 0.3s;
-}
-
-.series .serie {
-    fill: none;
-    stroke-width: 2;
-}
-
-.series:has(.serie:hover, .point:hover) .series-group:not(:hover) {
-    opacity: 0.3;
-}
-
-.series:has(.serie:hover, .point:hover) .series-group:hover {
-    opacity: 1;
-}
-
-.series:has(.serie:hover, .point:hover) .series-group:hover .serie {
-      stroke-width: 4;
-}
-
-.cursor.hidden {
-    visibility: hidden;
-}
-
-.cursor.point {
-    fill: white;
-    stroke-width: 2;
-}
-
-.cursor.vertical-line {
-    stroke: #666;
-    stroke-width: 1;
-    stroke-dasharray: 3, 3;
-    pointer-events: none;
-}
-
-.legend-item {
-  pointer-events: none;
-}
-
-.legend-item text {
-    font-size: 0.8em;
-}
-
-.legend-item rect {
-    width: 1em;
-    height: 1em;
-    display: inline-block;
-    margin-right: 0.5rem;
-}
-
-.axis-label {
-  font-size: 0.8em;
-  text-anchor: middle;
-}
-`;
-
 export class TimeViz extends HTMLElement {
   private declare isStatic: boolean;
   private declare transitionTime: number;
@@ -218,6 +48,178 @@ export class TimeViz extends HTMLElement {
       "y-axis-label",
       "x-axis-label",
     ];
+  }
+
+  public static get styles(): string {
+    return /*css*/`
+  :host {
+    display: block;
+    width: 100%;
+    height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      sans-serif;
+  }
+
+  section {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    gap: 1rem;
+    padding: 1rem;
+    box-sizing: border-box;
+  }
+
+  .controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .controls-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .controls-right {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  select {
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: white;
+    font-size: 0.9em;
+  }
+
+  input[type="date"] {
+    padding: 0.4rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: white;
+    font-size: 0.9em;
+  }
+
+  figure {
+    flex: 1;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  svg {
+    width: 100%;
+    height: 100%;
+    border: 1px solid #e0e0e0;
+    background: white;
+  }
+
+  button {
+    padding: 0.5rem 1rem;
+    border: 1px solid #007acc;
+    border-radius: 0.25em;
+    background: #007acc;
+    color: white;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: background-color 0.2s;
+  }
+
+  button:hover {
+      background: darken(#007acc, 5%);
+  }
+
+  button:disabled {
+      background: #ccc;
+      border-color: #ccc;
+      cursor: not-allowed;
+  }
+
+  .chart-title {
+    text-align: center;
+    margin: 0 0 1rem 0;
+    font-size: 1.2rem;
+    font-weight: 600;
+  }
+
+  .axis {
+    font-size: 0.7em;
+  }
+
+  .grid {
+    stroke: #e0e0e0;
+    stroke-width: 1;
+    stroke-dasharray: 2, 2;
+  }
+
+  .grid path {
+    stroke-width: 0;
+  }
+
+  .series {
+    opacity: 0.6;
+    transition: opacity 0.3s;
+  }
+
+  .series .serie {
+      fill: none;
+      stroke-width: 2;
+  }
+
+  .series:has(.serie:hover, .point:hover) .series-group:not(:hover) {
+      opacity: 0.3;
+  }
+
+  .series:has(.serie:hover, .point:hover) .series-group:hover {
+      opacity: 1;
+  }
+
+  .series:has(.serie:hover, .point:hover) .series-group:hover .serie {
+        stroke-width: 4;
+  }
+
+  .cursor.hidden {
+      visibility: hidden;
+  }
+
+  .cursor.point {
+      fill: white;
+      stroke-width: 2;
+  }
+
+  .cursor.vertical-line {
+      stroke: #666;
+      stroke-width: 1;
+      stroke-dasharray: 3, 3;
+      pointer-events: none;
+  }
+
+  .legend-item {
+    pointer-events: none;
+  }
+
+  .legend-item text {
+      font-size: 0.8em;
+  }
+
+  .legend-item rect {
+      width: 1em;
+      height: 1em;
+      display: inline-block;
+      margin-right: 0.5rem;
+  }
+
+  .axis-label {
+    font-size: 0.8em;
+    text-anchor: middle;
+  }
+  `.trim();
   }
 
   constructor() {
@@ -474,7 +476,7 @@ export class TimeViz extends HTMLElement {
     const hasData = this._data.length > 0 && this._config.ySeries.length > 0;
 
     const template = this.#fromString(/*html*/ `
-      <style>${style}</style>
+      <style>${TimeViz.styles}</style>
       <section>
         <div class="controls">
           <div class="controls-left">
