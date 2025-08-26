@@ -5,7 +5,6 @@ A web component for visualizing time series data built with Lit and D3.js.
 **Supported Versions:**
 
 ![D3.js](https://img.shields.io/badge/D3.js->=7.9.0-blue)
-![Lit](https://img.shields.io/badge/Lit->=3.3.1-blue)
 
 ## Features
 
@@ -124,7 +123,7 @@ chart.tooltipContent((d) => `
 `);
 ```
 
-**⚠️ Warning**: To make the tooltip work correctly, ensure that the `x` and `y` properties are set in the data.
+> **⚠️ Warning**: To make the tooltip work correctly, ensure that the `x` and `y` properties are set in the data.
 
 #### `tooltipStyle(css: string)`
 
@@ -168,9 +167,9 @@ Contributions are welcome! Please feel free to submit a Pull Request.
       </a>
     </td>
     <td align="center">
-      <a href="https://lit.dev/" target="_blank">
-        <img src="https://cdn.worldvectorlogo.com/logos/lit-1.svg" alt="Lit" width="42" height="42" /><br/>
-        <b>Lit</b><br/>
+      <a href="https://www.webcomponents.org/" target="_blank">
+        <img src="https://web-components-resources.appspot.com/static/logo.svg" alt="Web components" width="42" height="42" /><br/>
+        <b>Web Components</b><br/>
       </a>
     </td>
   </tr>
