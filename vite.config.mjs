@@ -1,23 +1,28 @@
 import { defineConfig } from "vite";
 import dts from "vite-plugin-dts";
+import { join } from "node:path";
+
+const dirname = import.meta.dirname ?? ".";
 
 export default defineConfig({
   build: {
     lib: {
-      entry: "src/index.ts",
-      name: "TimeViz", // global variable for UMD
-      fileName: "time-viz",
+      entry: join(dirname, "src", "index.ts"),
+      name: "TimeViz",
       formats: ["es", "umd"], // only ESM and UMD for browser/CDN
+      fileName: (format) => `time-viz.${format}.js`,
     },
     rollupOptions: {
-      external: ["lit", "d3"],
+      external: ["d3"],
       output: {
         globals: {
-          lit: "Lit",
           d3: "d3",
         },
       },
     },
+    outDir: join(dirname, "dist"),
+    emptyOutDir: true,
+    minify: true,
   },
   plugins: [
     dts({
