@@ -9,7 +9,7 @@ export default defineConfig({
     lib: {
       entry: join(dirname, "src", "index.ts"),
       name: "TimeViz",
-      formats: ["es", "umd"], // ESM for modern, UMD for CDN
+      formats: ["es", "umd", "cjs"], // ESM for modern, UMD for CDN
       fileName: (format) => `time-viz.${format}.js`,
     },
     rollupOptions: {

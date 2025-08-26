@@ -17,8 +17,7 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "useDefineForClassFields": false,
-    "declaration": true,
-    "declarationMap": true
+    "declaration": true
   },
   "include": ["src"]
 }

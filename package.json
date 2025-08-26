@@ -3,17 +3,17 @@
   "version": "0.1.0",
   "description": "Time series chart web component powered by D3.js.",
   "type": "module",
-  "main": "dist/time-viz.js",
-  "module": "dist/time-viz.js",
+  "main": "dist/time-viz.umd.js",
+  "module": "dist/time-viz.es.js",
   "types": "dist/types/index.d.ts",
   "exports": {
     "imports": {
       "types": "./dist/types/index.d.ts",
-      "default": "./dist/time-viz.js"
+      "default": "./dist/time-viz.es.js"
     },
     "require": {
       "types": "./dist/types/index.d.ts",
-      "default": "./dist/time-viz.umd.cjs"
+      "default": "./dist/time-viz.cjs.js"
     }
   },
   "scripts": {
