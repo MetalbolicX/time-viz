@@ -3,22 +3,22 @@
   "version": "0.1.0",
   "description": "Time series chart web component powered by D3.js.",
   "type": "module",
-  "main": "dist/time-viz.umd.js",
-  "module": "dist/time-viz.es.js",
-  "types": "dist/types/index.d.ts",
+  "main": "dist/index.umd.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
   "exports": {
     "imports": {
-      "types": "./dist/types/index.d.ts",
-      "default": "./dist/time-viz.es.js"
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     },
     "require": {
-      "types": "./dist/types/index.d.ts",
-      "default": "./dist/time-viz.cjs.js"
+      "types": "./dist/index.d.cts",
+      "default": "./dist/index.cjs"
     }
   },
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "tsdown",
     "preview": "vite preview",
     "start": "vite"
   },
@@ -38,11 +38,11 @@
   "license": "MIT",
   "devDependencies": {
     "@types/d3": "^7.4.3",
+    "tsdown": "^0.14.2",
     "typescript": "^5.9.2",
-    "vite": "^7.0.6",
-    "vite-plugin-dts": "^4.5.4"
+    "vite": "^7.0.6"
   },
-  "packageManager": "pnpm@10.14.0+sha512.ad27a79641b49c3e481a16a805baa71817a04bbe06a38d17e60e2eaee83f6a146c6a688125f5792e48dd5ba30e7da52a5cda4c3992b9ccf333f9ce223af84748",
+  "packageManager": "pnpm@10.15.0+sha512.486ebc259d3e999a4e8691ce03b5cac4a71cbeca39372a9b762cb500cfdf0873e2cb16abe3d951b1ee2cf012503f027b98b6584e4df22524e0c7450d9ec7aa7b",
   "dependencies": {
     "d3": "^7.9.0",
     "tipviz": "^2.0.1"
