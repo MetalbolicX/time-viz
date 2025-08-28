@@ -9,6 +9,7 @@ export default defineConfig({
   noExternal: "tipviz",
   tsconfig: true,
   outDir: "./dist",
+  fixedExtension: true,
   outputOptions: {
     name: "TimeViz",
     globals: {
