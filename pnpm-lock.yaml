@@ -12,8 +12,8 @@ importers:
         specifier: ^7.9.0
         version: 7.9.0
       tipviz:
-        specifier: ^2.0.1
-        version: 2.0.1
+        specifier: ^2.0.2
+        version: 2.0.2
     devDependencies:
       '@types/d3':
         specifier: ^7.4.3
@@ -823,8 +823,8 @@ packages:
     resolution: {integrity: sha512-tX5e7OM1HnYr2+a2C/4V0htOcSQcoSTH9KgJnVvNm5zm/cyEWKJ7j7YutsH9CxMdtOkkLFy2AHrMci9IM8IPZQ==}
     engines: {node: '>=12.0.0'}
 
-  tipviz@2.0.1:
-    resolution: {integrity: sha512-B6XXQgm+SpfLZar1Wg1c3G6OL0p/I4CJJ6goUc9E6zi922AMG6DDqQylLfK9KhdY6O++4e+rnfwCsvQ3/tmOxA==}
+  tipviz@2.0.2:
+    resolution: {integrity: sha512-JxvQkqa29GD8aScCf5vLEm2KUDaOLxOVt6DPs60yzJClXJcXhPJdMZK+m/ufg2XVTty5/R/S6XYWDeoD3Vzh6g==}
     engines: {node: '>=18.0.0'}
 
   tree-kill@1.2.2:
@@ -1623,7 +1623,7 @@ snapshots:
       fdir: 6.5.0(picomatch@4.0.3)
       picomatch: 4.0.3
 
-  tipviz@2.0.1: {}
+  tipviz@2.0.2: {}
 
   tree-kill@1.2.2: {}
 
