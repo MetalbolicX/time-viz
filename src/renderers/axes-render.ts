@@ -15,7 +15,7 @@ export const renderXAxis = (ctx: ChartContext): void => {
     .data([null])
     .join("g")
     .attr("class", "x axis")
-    .attr("transform", `translate(0,${ctx.innerHeight + ctx.margin.top})`)
+    .attr("transform", `translate(0, ${ctx.innerHeight + ctx.margin.top})`)
     .call(xAxis as any);
 };
 
