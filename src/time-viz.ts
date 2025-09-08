@@ -581,7 +581,7 @@ export class TimeViz extends HTMLElement {
     this.#resetButton.removeEventListener("click", this.#handleResetDates);
     select(this.#svgRef)
       .on("pointermove", null)
-      .on("mouseover", null)
+      .on("pointerover", null)
       .on("pointerout", null);
   }
 
