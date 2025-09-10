@@ -1,4 +1,4 @@
-import { axisBottom, axisLeft, format } from "d3";
+import { axisBottom, axisLeft, format, timeFormat } from "d3";
 import type { ChartContext } from "@/types";
 
 /**
@@ -8,7 +8,7 @@ import type { ChartContext } from "@/types";
 export const renderXAxis = (ctx: ChartContext): void => {
   const xAxis = axisBottom(ctx.xScale)
     .ticks(ctx.xTicks)
-    .tickFormat(format(ctx.formatXAxis) as any);
+    .tickFormat(timeFormat(ctx.formatXAxis) as any);
 
   ctx.selection
     .selectAll(".x.axis")
@@ -75,7 +75,7 @@ export const renderYAxisLabel = (ctx: ChartContext): void => {
     .data([ctx.yAxisLabel])
     .join("text")
     .attr("class", "y axis-label")
-    .attr("x", -0.2 * ctx.margin.left)
+    .attr("x", -ctx.margin.left)
     .attr("y", ctx.margin.top)
     .attr("transform", `rotate(-90, ${ctx.margin.left}, ${ctx.margin.top})`)
     .attr("dy", "1em")
