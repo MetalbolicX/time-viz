@@ -616,7 +616,7 @@ export const createTimeVizChart = () => {
    * @param accessor - A function that extracts the x value from a data row.
    * @returns The chart instance for chaining.
    */
-  chart.xSerie = (accessor: (d: ChartDataRow) => Date | number) => {
+  chart.xSerie = (accessor: (d: ChartDataRow) => Date) => {
     if (typeof accessor !== "function") {
       console.warn("xSerie accessor must be a function");
       return chart;
