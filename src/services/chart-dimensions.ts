@@ -5,7 +5,7 @@ export class ChartDimensions {
   #width: number;
   #height: number;
 
-  constructor(svgContainer: SVGSVGElement, margin: MarginConfig) {
+  constructor(svgContainer: SVGElement, margin: MarginConfig) {
     this.#margin = { ...margin };
     this.#width = svgContainer.clientWidth;
     this.#height = svgContainer.clientHeight;
