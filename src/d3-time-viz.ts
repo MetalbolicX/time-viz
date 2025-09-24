@@ -1,7 +1,18 @@
 import { scaleTime, scaleLinear } from "d3";
 import type { Selection, ScaleOrdinal } from "d3";
-import type { TimeVizSeriesConfig, ChartDataRow, MarginConfig } from "./types";
+import type { TimeVizSeriesConfig, ChartDataRow, MarginConfig } from "@/types";
 import type { TipVizTooltip } from "tipviz";
+import {
+  renderXAxis,
+  renderYAxis,
+  renderXGrid,
+  renderYGrid,
+  renderSeries,
+  renderYAxisLabel,
+  renderXAxisLabel,
+  renderLegend,
+  setupCursorEvents,
+} from "@/renderers";
 
 import { ConfigurationManager, ChartDimensions, DataService } from "@/services";
 import type { ChartContext } from "@/types";
@@ -23,26 +34,6 @@ import { validateSetup } from "@/utils";
 export const createTimeVizChart = () => {
   // Centralized default values
   const defaultConfig = ConfigurationManager.getDefaultConfig();
-
-  // let tooltip: TipVizTooltip;
-  // let series: TimeVizSeriesConfig[];
-  // let data: ChartDataRow[];
-  // let colorScale: d3.ScaleOrdinal<string, string>;
-  // let isCurved: boolean = defaultConfig.isCurved;
-  // let isStatic: boolean = defaultConfig.isStatic;
-  // let transitionTime: number = defaultConfig.transitionTime;
-  // let xTicks: number = defaultConfig.xTicks;
-  // let yTicks: number = defaultConfig.yTicks;
-  // let margin: MarginConfig = { ...defaultConfig.margin };
-  // let formatXAxis: string = defaultConfig.formatXAxis;
-  // let formatYAxis: string = defaultConfig.formatYAxis;
-  // let xSerie: (d: ChartDataRow) => Date | number;
-  // let innerWidth: number = 0;
-  // let innerHeight: number = 0;
-  // let xScale: d3.ScaleTime<number, number>;
-  // let yScale: d3.ScaleLinear<number, number>;
-  // let yAxisLabel: string = defaultConfig.yAxisLabel;
-  // let xAxisLabel: string = defaultConfig.xAxisLabel;
   const ctx: Partial<ChartContext> = {
     isCurved: defaultConfig.isCurved,
     isStatic: defaultConfig.isStatic,
@@ -478,12 +469,12 @@ export const createTimeVizChart = () => {
   // };
 
   // const setupChartEventListeners = (
-  //   selection: Selection<SVGElement, unknown, null, undefined>
+  //   ctx: ChartContext,
   // ) => {
   //   // Cursor interaction (only if not static)
-  //   if (isStatic) return;
+  //   if (ctx.isStatic) return;
   //   // Remove previous event listeners before adding new ones
-  //   selection
+  //   ctx.selection
   //     .on("pointermove", null)
   //     .on("pointerover", null)
   //     .on("pointerout", null);
@@ -499,35 +490,10 @@ export const createTimeVizChart = () => {
   //     }
   //   };
 
-  //   selection
+  //   ctx.selection
   //     .on("pointermove", throttledPointerMove)
   //     .on("pointerover", handleClosestPointOver)
   //     .on("pointerout", handleClosestPointOut);
-  // };
-
-  // const validateSetup = (): boolean => {
-  //   if (!series || !Array.isArray(series) || !series.length) {
-  //     console.warn("[d3-time-viz] Chart series is missing or empty.");
-  //     return false;
-  //   }
-  //   if (!data || !Array.isArray(data) || !data.length) {
-  //     console.warn("[d3-time-viz] Chart data is missing or empty.");
-  //     return false;
-  //   }
-  //   if (typeof xSerie !== "function") {
-  //     console.warn("[d3-time-viz] xSerie accessor is missing.");
-  //     return false;
-  //   }
-  //   if (
-  //     !colorScale ||
-  //     typeof colorScale !== "function" ||
-  //     typeof colorScale.domain !== "function" ||
-  //     typeof colorScale.range !== "function"
-  //   ) {
-  //     console.warn("[d3-time-viz] colorScale is missing or invalid.");
-  //     return false;
-  //   }
-  //   return true;
   // };
 
   /**
@@ -568,7 +534,7 @@ export const createTimeVizChart = () => {
 
     ctx.selection.attr("viewBox", `0 0 ${width} ${height}`);
 
-    const xDomain = DataService.getDataDomain(ctx.data!, [ctx.xSerie!]);
+    const xDomain = DataService.getDataDomain(ctx.data!, [ctx.xSerie! as any]);
     if (!xDomain) {
       console.warn(
         "[d3-time-viz] xSerie must return Dates for all data points."
@@ -598,17 +564,17 @@ export const createTimeVizChart = () => {
       .range(dimensions.innerYRange)
       .nice();
 
-    selection
-      .call(renderXAxis)
-      .call(renderXGrid)
-      .call(renderXAxisLabel)
-      .call(renderYAxis)
-      .call(renderYGrid)
-      .call(renderYAxisLabel)
-      .call(renderSeries)
-      .call(renderLegend);
+    const fullCtx = ctx as ChartContext;
 
-    setupChartEventListeners(selection);
+    renderXAxis(fullCtx);
+    renderXGrid(fullCtx);
+    renderXAxisLabel(fullCtx);
+    renderYAxis(fullCtx);
+    renderYGrid(fullCtx);
+    renderYAxisLabel(fullCtx);
+    renderSeries(fullCtx);
+    renderLegend(fullCtx);
+    setupCursorEvents(fullCtx);
   };
 
   /**
