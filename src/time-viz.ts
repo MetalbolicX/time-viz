@@ -4,32 +4,49 @@ import type {
   TimeVizSeriesConfig,
   ChartDataRow,
   MarginConfig,
-} from "./types";
-import { createTimeVizChart } from "./d3-time-viz";
+  ChartConfig,
+} from "@/types";
+import { createTimeVizChart } from "@/d3-time-viz";
+import { ChartEventEmitter } from "@/events";
+import { DataService, ConfigurationManager } from "@/services";
 import "tipviz";
 import { TipVizTooltip } from "tipviz";
 
 export class TimeViz extends HTMLElement {
-  private declare isStatic: boolean;
-  private declare transitionTime: number;
-  private declare isCurved: boolean;
-  private declare margin: MarginConfig;
-  private declare xTicks: number;
-  private declare yTicks: number;
-  private declare formatXAxis: string;
-  private declare formatYAxis: string;
-  private declare yAxisLabel: string;
-  private declare xAxisLabel: string;
+  // Event emitter for chart communication
+  #eventEmitter = new ChartEventEmitter();
+  // Configuration manager
+  #chartConfig: ChartConfig;
 
+  // private declare isStatic: boolean;
+  // private declare transitionTime: number;
+  // private declare isCurved: boolean;
+  // private declare margin: MarginConfig;
+  // private declare xTicks: number;
+  // private declare yTicks: number;
+  // private declare formatXAxis: string;
+  // private declare formatYAxis: string;
+  // private declare yAxisLabel: string;
+  // private declare xAxisLabel: string;
+
+  // private declare _config: TimeVizConfig;
+  // private declare _data: ChartDataRow[];
+  // private declare _selectedSeries: string;
+  // private declare _hiddenSeries: Set<string>;
+  // private declare _startDate: string;
+  // private declare _endDate: string;
+  // private declare _minDate: string;
+  // private declare _maxDate: string;
+
+  // Chart state
   private declare _config: TimeVizConfig;
   private declare _data: ChartDataRow[];
   private declare _selectedSeries: string;
   private declare _hiddenSeries: Set<string>;
   private declare _startDate: string;
   private declare _endDate: string;
-  private declare _minDate: string;
-  private declare _maxDate: string;
 
+  // DOM elements
   #svgRef!: SVGElement;
   #colorScale = scaleOrdinal(schemeCategory10);
   private declare _tooltip: TipVizTooltip;
@@ -227,38 +244,60 @@ export class TimeViz extends HTMLElement {
   }
 
   constructor() {
+    // super();
+    // this.#shadowRoot = this.attachShadow({ mode: "open" });
+    // this.isStatic = false;
+    // this.transitionTime = 0;
+    // this.isCurved = false;
+    // this.margin = { top: 40, right: 80, bottom: 60, left: 60 };
+    // this.xTicks = 5;
+    // this.yTicks = 5;
+    // this.formatXAxis = "%Y-%m-%d";
+    // this.formatYAxis = ".2f";
+    // this._data = [];
+    // this._selectedSeries = "All";
+    // this._hiddenSeries = new Set<string>();
+    // this._startDate = "";
+    // this._endDate = "";
+    // this._minDate = "";
+    // this._maxDate = "";
+    // this._config = {
+    //   data: [],
+    //   xSerie: { accessor: (d: ChartDataRow) => d.date as Date },
+    //   ySeries: [],
+    // };
+    // this.yAxisLabel = "";
+    // this.xAxisLabel = "";
+
+    // this.#createDOM();
     super();
     this.#shadowRoot = this.attachShadow({ mode: "open" });
-    this.isStatic = false;
-    this.transitionTime = 0;
-    this.isCurved = false;
-    this.margin = { top: 40, right: 80, bottom: 60, left: 60 };
-    this.xTicks = 5;
-    this.yTicks = 5;
-    this.formatXAxis = "%Y-%m-%d";
-    this.formatYAxis = ".2f";
+    // Initialize default configurtion
+    this.#chartConfig = ConfigurationManager.getDefaultConfig();
+    // Initialize chart state
     this._data = [];
     this._selectedSeries = "All";
     this._hiddenSeries = new Set<string>();
-    this._startDate = "";
-    this._endDate = "";
-    this._minDate = "";
-    this._maxDate = "";
     this._config = {
       data: [],
       xSerie: { accessor: (d: ChartDataRow) => d.date as Date },
       ySeries: [],
-    };
-    this.yAxisLabel = "";
-    this.xAxisLabel = "";
-
+    }
+    this._startDate = "";
+    this._endDate = "";
     this.#createDOM();
+    this.#setupEventListeners();
   }
 
   /**
    * Called when the element is connected to the DOM.
    */
   public connectedCallback() {
+    // Parse initial attributes
+    const attributeConfig = ConfigurationManager.createFromAttributes(this);
+    this.#chartConfig = ConfigurationManager.mergeConfigs(
+      this.#chartConfig, attributeConfig
+    );
     this.#addEventListeners();
     this.render();
   }
@@ -278,73 +317,87 @@ export class TimeViz extends HTMLElement {
    * @returns {void}
    */
   public attributeChangedCallback(
-    name: string,
+    _name: string,
     oldValue: string,
     newValue: string
   ): void {
     if (oldValue === newValue) {
       return;
     }
-    switch (name) {
-      case "is-static":
-        this.isStatic = newValue !== null;
-        break;
-      case "transition-time":
-        this.transitionTime = Number(newValue);
-        break;
-      case "is-curved":
-        this.isCurved = newValue !== null;
-        break;
-      case "margin":
-        try {
-          this.margin = JSON.parse(newValue);
-        } catch (e) {
-          console.error("Failed to parse margin attribute:", e);
-        }
-        break;
-      case "x-ticks":
-        this.xTicks = Number(newValue);
-        break;
-      case "y-ticks":
-        this.yTicks = Number(newValue);
-        break;
-      case "format-x-axis":
-        this.formatXAxis = newValue;
-        break;
-      case "format-y-axis":
-        this.formatYAxis = newValue;
-        break;
-      case "y-axis-label":
-        this.yAxisLabel = newValue;
-        break;
-      case "x-axis-label":
-        this.xAxisLabel = newValue;
-        break;
-    }
+
+    const attributeConfig = ConfigurationManager.createFromAttributes(this);
+    this.#chartConfig = ConfigurationManager.mergeConfigs(
+      ConfigurationManager.getDefaultConfig(), attributeConfig
+    );
+    this.#eventEmitter.emit("configChanged", { config: this.#chartConfig });
     this.render();
+    // switch (name) {
+    //   case "is-static":
+    //     this.isStatic = newValue !== null;
+    //     break;
+    //   case "transition-time":
+    //     this.transitionTime = Number(newValue);
+    //     break;
+    //   case "is-curved":
+    //     this.isCurved = newValue !== null;
+    //     break;
+    //   case "margin":
+    //     try {
+    //       this.margin = JSON.parse(newValue);
+    //     } catch (e) {
+    //       console.error("Failed to parse margin attribute:", e);
+    //     }
+    //     break;
+    //   case "x-ticks":
+    //     this.xTicks = Number(newValue);
+    //     break;
+    //   case "y-ticks":
+    //     this.yTicks = Number(newValue);
+    //     break;
+    //   case "format-x-axis":
+    //     this.formatXAxis = newValue;
+    //     break;
+    //   case "format-y-axis":
+    //     this.formatYAxis = newValue;
+    //     break;
+    //   case "y-axis-label":
+    //     this.yAxisLabel = newValue;
+    //     break;
+    //   case "x-axis-label":
+    //     this.xAxisLabel = newValue;
+    //     break;
+    // }
+    // this.render();
   }
 
   /**
    * Sets the configuration for the time series visualization.
    */
   public set config(cfg: TimeVizConfig) {
+    // this._config = cfg;
+    // this._data = [...cfg.data];
+    // this._selectedSeries = "All";
+    // this._hiddenSeries = new Set<string>();
+
+    // if (this._data.length) {
+    //   const dates = this._data.map((d) =>
+    //     this._config.xSerie.accessor(d)
+    //   ) as Date[];
+    //   const minDate = new Date(Math.min(...dates.map((d) => d.getTime())));
+    //   const maxDate = new Date(Math.max(...dates.map((d) => d.getTime())));
+    //   this._minDate = minDate.toISOString().split("T")[0];
+    //   this._maxDate = maxDate.toISOString().split("T")[0];
+    //   this._startDate = this._minDate;
+    //   this._endDate = this._maxDate;
+    // }
+
+    // this.render();
     this._config = cfg;
     this._data = [...cfg.data];
     this._selectedSeries = "All";
     this._hiddenSeries = new Set<string>();
-
-    if (this._data.length) {
-      const dates = this._data.map((d) =>
-        this._config.xSerie.accessor(d)
-      ) as Date[];
-      const minDate = new Date(Math.min(...dates.map((d) => d.getTime())));
-      const maxDate = new Date(Math.max(...dates.map((d) => d.getTime())));
-      this._minDate = minDate.toISOString().split("T")[0];
-      this._maxDate = maxDate.toISOString().split("T")[0];
-      this._startDate = this._minDate;
-      this._endDate = this._maxDate;
-    }
-
+    // Emit data change event
+    this.#eventEmitter.emit("data-changed", { data: this._data, timestamp: Date.now() });
     this.render();
   }
 
