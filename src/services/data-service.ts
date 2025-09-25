@@ -93,17 +93,52 @@ const createDataService = () => {
    */
   const getDataDomain = (
     data: ChartDataRow[],
-    accessors: ((d: ChartDataRow) => number)[]
-  ): [number, number] | null => {
-    if (!validateDataSet(data) || !accessors.length) return null;
+    accessors: ((d: ChartDataRow) => number | Date)[]
+  ): [number, number] | [Date, Date] | null => {
+    if (!validateDataSet(data) || !accessors || accessors.length === 0) return null;
 
-    const values = Iterator.from(accessors)
-      .flatMap((accessor) => data.map((d) => accessor(d)))
-      .filter((value) => typeof value === "number" && !isNaN(value))
-      .toArray();
-    if (!values.length) return null;
+    // collect valid numeric and date values without using push
+    const aggregated = accessors.reduce(
+      (acc, accessor) => {
+        const values = data.map(accessor);
+        const numericFromAccessor = values.filter(
+          (v): v is number => typeof v === "number" && !isNaN(v as number)
+        );
+        const dateTsFromAccessor = values
+          .filter((v): v is Date => v instanceof Date && !isNaN((v as Date).getTime()))
+          .map((d) => d.getTime());
 
-    return [Math.min(...values), Math.max(...values)];
+        return {
+          numeric: acc.numeric.concat(numericFromAccessor),
+          dateTs: acc.dateTs.concat(dateTsFromAccessor),
+        };
+      },
+      { numeric: [] as number[], dateTs: [] as number[] }
+    );
+
+    const numericValues = aggregated.numeric;
+    const dateValues = aggregated.dateTs;
+
+    const hasNumbers = numericValues.length > 0;
+    const hasDates = dateValues.length > 0;
+    if (!hasNumbers && !hasDates) return null;
+
+    if (!hasNumbers && hasDates) {
+      const minTs = Math.min(...dateValues);
+      const maxTs = Math.max(...dateValues);
+      return [new Date(minTs), new Date(maxTs)];
+    }
+
+    if (hasNumbers && !hasDates) {
+      const minNum = Math.min(...numericValues);
+      const maxNum = Math.max(...numericValues);
+      return [minNum, maxNum];
+    }
+
+    const combined = numericValues.concat(dateValues);
+    const minCombined = Math.min(...combined);
+    const maxCombined = Math.max(...combined);
+    return [minCombined, maxCombined];
   };
 
   return {

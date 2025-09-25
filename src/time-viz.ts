@@ -3,7 +3,6 @@ import type {
   TimeVizConfig,
   TimeVizSeriesConfig,
   ChartDataRow,
-  MarginConfig,
   ChartConfig,
 } from "@/types";
 import { createTimeVizChart } from "@/d3-time-viz";
@@ -18,26 +17,6 @@ export class TimeViz extends HTMLElement {
   // Configuration manager
   #chartConfig: ChartConfig;
 
-  // private declare isStatic: boolean;
-  // private declare transitionTime: number;
-  // private declare isCurved: boolean;
-  // private declare margin: MarginConfig;
-  // private declare xTicks: number;
-  // private declare yTicks: number;
-  // private declare formatXAxis: string;
-  // private declare formatYAxis: string;
-  // private declare yAxisLabel: string;
-  // private declare xAxisLabel: string;
-
-  // private declare _config: TimeVizConfig;
-  // private declare _data: ChartDataRow[];
-  // private declare _selectedSeries: string;
-  // private declare _hiddenSeries: Set<string>;
-  // private declare _startDate: string;
-  // private declare _endDate: string;
-  // private declare _minDate: string;
-  // private declare _maxDate: string;
-
   // Chart state
   private declare _config: TimeVizConfig;
   private declare _data: ChartDataRow[];
@@ -45,6 +24,8 @@ export class TimeViz extends HTMLElement {
   private declare _hiddenSeries: Set<string>;
   private declare _startDate: string;
   private declare _endDate: string;
+  private declare _minDate: string;
+  private declare _maxDate: string;
 
   // DOM elements
   #svgRef!: SVGElement;
@@ -244,36 +225,12 @@ export class TimeViz extends HTMLElement {
   }
 
   constructor() {
-    // super();
-    // this.#shadowRoot = this.attachShadow({ mode: "open" });
-    // this.isStatic = false;
-    // this.transitionTime = 0;
-    // this.isCurved = false;
-    // this.margin = { top: 40, right: 80, bottom: 60, left: 60 };
-    // this.xTicks = 5;
-    // this.yTicks = 5;
-    // this.formatXAxis = "%Y-%m-%d";
-    // this.formatYAxis = ".2f";
-    // this._data = [];
-    // this._selectedSeries = "All";
-    // this._hiddenSeries = new Set<string>();
-    // this._startDate = "";
-    // this._endDate = "";
-    // this._minDate = "";
-    // this._maxDate = "";
-    // this._config = {
-    //   data: [],
-    //   xSerie: { accessor: (d: ChartDataRow) => d.date as Date },
-    //   ySeries: [],
-    // };
-    // this.yAxisLabel = "";
-    // this.xAxisLabel = "";
-
-    // this.#createDOM();
     super();
     this.#shadowRoot = this.attachShadow({ mode: "open" });
-    // Initialize default configurtion
+
+    // Initialize default configuration
     this.#chartConfig = ConfigurationManager.getDefaultConfig();
+
     // Initialize chart state
     this._data = [];
     this._selectedSeries = "All";
@@ -282,11 +239,13 @@ export class TimeViz extends HTMLElement {
       data: [],
       xSerie: { accessor: (d: ChartDataRow) => d.date as Date },
       ySeries: [],
-    }
+    };
     this._startDate = "";
     this._endDate = "";
+    this._minDate = "";
+    this._maxDate = "";
+
     this.#createDOM();
-    this.#setupEventListeners();
   }
 
   /**
@@ -329,73 +288,33 @@ export class TimeViz extends HTMLElement {
     this.#chartConfig = ConfigurationManager.mergeConfigs(
       ConfigurationManager.getDefaultConfig(), attributeConfig
     );
-    this.#eventEmitter.emit("configChanged", { config: this.#chartConfig });
+    this.#eventEmitter.emit("config-changed", { config: this.#chartConfig });
     this.render();
-    // switch (name) {
-    //   case "is-static":
-    //     this.isStatic = newValue !== null;
-    //     break;
-    //   case "transition-time":
-    //     this.transitionTime = Number(newValue);
-    //     break;
-    //   case "is-curved":
-    //     this.isCurved = newValue !== null;
-    //     break;
-    //   case "margin":
-    //     try {
-    //       this.margin = JSON.parse(newValue);
-    //     } catch (e) {
-    //       console.error("Failed to parse margin attribute:", e);
-    //     }
-    //     break;
-    //   case "x-ticks":
-    //     this.xTicks = Number(newValue);
-    //     break;
-    //   case "y-ticks":
-    //     this.yTicks = Number(newValue);
-    //     break;
-    //   case "format-x-axis":
-    //     this.formatXAxis = newValue;
-    //     break;
-    //   case "format-y-axis":
-    //     this.formatYAxis = newValue;
-    //     break;
-    //   case "y-axis-label":
-    //     this.yAxisLabel = newValue;
-    //     break;
-    //   case "x-axis-label":
-    //     this.xAxisLabel = newValue;
-    //     break;
-    // }
-    // this.render();
   }
 
   /**
    * Sets the configuration for the time series visualization.
    */
   public set config(cfg: TimeVizConfig) {
-    // this._config = cfg;
-    // this._data = [...cfg.data];
-    // this._selectedSeries = "All";
-    // this._hiddenSeries = new Set<string>();
-
-    // if (this._data.length) {
-    //   const dates = this._data.map((d) =>
-    //     this._config.xSerie.accessor(d)
-    //   ) as Date[];
-    //   const minDate = new Date(Math.min(...dates.map((d) => d.getTime())));
-    //   const maxDate = new Date(Math.max(...dates.map((d) => d.getTime())));
-    //   this._minDate = minDate.toISOString().split("T")[0];
-    //   this._maxDate = maxDate.toISOString().split("T")[0];
-    //   this._startDate = this._minDate;
-    //   this._endDate = this._maxDate;
-    // }
-
-    // this.render();
     this._config = cfg;
     this._data = [...cfg.data];
     this._selectedSeries = "All";
     this._hiddenSeries = new Set<string>();
+
+    // Calculate date range using DataService
+    if (DataService.validateDataSet(this._data)) {
+      const dateDomain = DataService.getDataDomain(this._data, [this._config.xSerie.accessor as any]);
+      if (dateDomain) {
+        const [minTime, maxTime] = dateDomain;
+        const minDate = new Date(minTime);
+        const maxDate = new Date(maxTime);
+        this._minDate = minDate.toISOString().split("T")[0];
+        this._maxDate = maxDate.toISOString().split("T")[0];
+        this._startDate = this._minDate;
+        this._endDate = this._maxDate;
+      }
+    }
+
     // Emit data change event
     this.#eventEmitter.emit("data-changed", { data: this._data, timestamp: Date.now() });
     this.render();
@@ -414,22 +333,21 @@ export class TimeViz extends HTMLElement {
    */
   public get filteredSeries(): TimeVizSeriesConfig[] {
     if (!this._config?.ySeries?.length) return [];
-    if (this._selectedSeries === "All") {
-      return this._config.ySeries.filter(
-        ({ label }) => !this._hiddenSeries.has(label)
-      );
-    }
-    return this._config.ySeries.filter(
-      ({ label }) =>
-        label === this._selectedSeries && !this._hiddenSeries.has(label)
+    return DataService.selectedSeries(
+      this._config.ySeries,
+      this._selectedSeries,
+      this._hiddenSeries
     );
   }
 
   /**
-   * Returns the filtered data based on the selected series and date range.
+   * Returns the filtered data based on the date range.
+   * Series filtering is handled at the series configuration level.
    */
   public get filteredData(): ChartDataRow[] {
-    if (!this._data.length || !this._startDate || !this._endDate) return [];
+    if (!DataService.validateDataSet(this._data)) return [];
+    if (!this._startDate || !this._endDate) return this._data;
+
     const startDate = new Date(this._startDate);
     const endDate = new Date(this._endDate);
     // Adjust for timezone offset by setting hours to noon
@@ -438,6 +356,7 @@ export class TimeViz extends HTMLElement {
 
     return this._data.filter((d) => {
       const date = this._config.xSerie.accessor(d) as Date;
+      if (!(date instanceof Date)) return false;
       return date >= startDate && date <= endDate;
     });
   }
@@ -480,6 +399,13 @@ export class TimeViz extends HTMLElement {
   #handleSeriesChange = (event: Event): void => {
     const target = event.target as HTMLSelectElement;
     this._selectedSeries = target.value;
+
+    // Emit series change event
+    this.#eventEmitter.emit("series-changed", {
+      selectedSeries: this._selectedSeries,
+      hiddenSeries: this._hiddenSeries
+    });
+
     this.#renderChart();
   };
 
@@ -520,24 +446,28 @@ export class TimeViz extends HTMLElement {
   #renderChart(): void {
     if (!this.#svgRef || !this._data.length || !this._config.ySeries.length)
       return;
+
     const chart = createTimeVizChart()
       .colorScale(this.#colorScale)
       .data(this.filteredData)
-      .formatXAxis(this.formatXAxis)
-      .formatYAxis(this.formatYAxis)
-      .isCurved(this.isCurved)
-      .isStatic(this.isStatic)
-      .margin(this.margin)
+      .formatXAxis(this.#chartConfig.formatXAxis)
+      .formatYAxis(this.#chartConfig.formatYAxis)
+      .isCurved(this.#chartConfig.isCurved)
+      .isStatic(this.#chartConfig.isStatic)
+      .margin(this.#chartConfig.margin)
       .series(this.filteredSeries)
       .tooltip(this._tooltip)
-      .transitionTime(this.transitionTime)
-      .xAxisLabel(this.xAxisLabel)
+      .transitionTime(this.#chartConfig.transitionTime)
+      .xAxisLabel(this.#chartConfig.xAxisLabel)
       .xSerie(this._config.xSerie.accessor)
-      .xTicks(this.xTicks)
-      .yAxisLabel(this.yAxisLabel)
-      .yTicks(this.yTicks);
+      .xTicks(this.#chartConfig.xTicks)
+      .yAxisLabel(this.#chartConfig.yAxisLabel)
+      .yTicks(this.#chartConfig.yTicks);
 
     select(this.#svgRef).call(chart);
+
+    // Emit render complete event
+    this.#eventEmitter.emit("render-complete", { renderTime: Date.now() });
   }
 
   /**
@@ -546,9 +476,7 @@ export class TimeViz extends HTMLElement {
    * @returns A DocumentFragment containing the parsed HTML.
    */
   #fromString(html: string): DocumentFragment {
-    const range = document.createRange();
-    const fragment = range.createContextualFragment(html);
-    return fragment;
+    return document.createRange().createContextualFragment(html);
   }
 
   /**
@@ -607,7 +535,31 @@ export class TimeViz extends HTMLElement {
   }
 
   /**
-   * Adds event listeners for the component.
+   * Sets up event listeners for internal chart events.
+   * @returns {void}
+   */
+  #setupEventListeners(): void {
+    // Listen to internal chart events
+    this.#eventEmitter.on("data-changed", (event) => {
+      console.log("[TimeViz] Data changed:", event.detail);
+    });
+
+    this.#eventEmitter.on("config-changed", (event) => {
+      console.log("[TimeViz] Config changed:", event.detail);
+    });
+
+    this.#eventEmitter.on("series-changed", (event) => {
+      console.log("[TimeViz] Series changed:", event.detail);
+      this.#renderChart();
+    });
+
+    this.#eventEmitter.on("render-complete", (event) => {
+      console.log("[TimeViz] Render complete:", event.detail);
+    });
+  }
+
+  /**
+   * Adds event listeners for the DOM elements.
    * @returns {void}
    */
   #addEventListeners(): void {
@@ -618,6 +570,9 @@ export class TimeViz extends HTMLElement {
     );
     this.#endDateInput.addEventListener("change", this.#handleEndDateChange);
     this.#resetButton.addEventListener("click", this.#handleResetDates);
+
+    // Setup internal event listeners
+    this.#setupEventListeners();
   }
 
   /**
@@ -673,13 +628,18 @@ export class TimeViz extends HTMLElement {
     this.#endDateInput.disabled = !hasData;
     this.#resetButton.disabled = !hasData;
 
-    // Update date input values
-    this.#startDateInput.value = this._startDate;
-    this.#startDateInput.min = this._minDate;
-    this.#startDateInput.max = this._endDate;
-    this.#endDateInput.value = this._endDate;
-    this.#endDateInput.min = this._startDate;
-    this.#endDateInput.max = this._maxDate;
+    // Update date input values and constraints
+    if (this._startDate) {
+      this.#startDateInput.value = this._startDate;
+      this.#startDateInput.min = this._minDate;
+      this.#startDateInput.max = this._endDate || this._maxDate;
+    }
+
+    if (this._endDate) {
+      this.#endDateInput.value = this._endDate;
+      this.#endDateInput.min = this._startDate || this._minDate;
+      this.#endDateInput.max = this._maxDate;
+    }
 
     this.#renderChart();
   }

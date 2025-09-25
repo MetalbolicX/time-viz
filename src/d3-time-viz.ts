@@ -521,7 +521,7 @@ export const createTimeVizChart = () => {
       selection.node() as SVGElement,
       ctx.margin!
     );
-    if (dimensions.areValidDimensions) {
+    if (!dimensions.areValidDimensions) {
       console.warn("[d3-time-viz] SVG element has non-positive dimensions.");
       return;
     }

@@ -21,7 +21,8 @@ if (!chart) {
 chart.config = {
   data,
   xSerie: {
-    accessor: (d: any) => d.date,
+    // accessor: (d: any) => d.date,
+    accessor: ({ date }: any) => date,
     label: "Date",
   },
   ySeries: [
