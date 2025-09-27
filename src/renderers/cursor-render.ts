@@ -42,15 +42,16 @@ export const renderCursor = (ctx: ChartContext, row: ChartDataRow): void => {
     .attr("role", "button")
     .attr("aria-label", ({ label, x, y }) => `${label} - x: ${x}, y: ${y}`);
 
+  const [yMin, yMax] = ctx.yScale.domain();
   seriesGroup
     .selectAll(".cursor.vertical-line")
     .data([row])
     .join("line")
     .attr("class", "cursor vertical-line")
     .attr("x1", ctx.xScale(ctx.xSerie(row)))
-    .attr("y1", 0)
+    .attr("y1", ctx.yScale(yMin))
     .attr("x2", ctx.xScale(ctx.xSerie(row)))
-    .attr("y2", ctx.innerHeight);
+    .attr("y2", ctx.yScale(yMax));
 };
 
 export const setupCursorEvents = (ctx: ChartContext): void => {
