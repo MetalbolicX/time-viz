@@ -8,6 +8,7 @@ import type { ChartDataRow, ChartContext } from "@/types";
  * @returns void
  */
 export const renderCursor = (ctx: ChartContext, row: ChartDataRow): void => {
+  console.log("Hello", ctx.isStatic);
   if (ctx.isStatic) return;
 
   const seriesGroup = ctx.selection
