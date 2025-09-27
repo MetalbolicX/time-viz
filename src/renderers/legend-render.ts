@@ -46,7 +46,7 @@ export const renderLegend = (ctx: ChartContext): void => {
         .join("text")
         .attr("class", "legend-label")
         .attr("x", 24)
-        .attr("y", 10)
+        .attr("y", 12)
         .text(({ label }) => label)
     });
 };
