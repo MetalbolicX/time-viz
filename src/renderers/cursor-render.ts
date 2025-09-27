@@ -8,7 +8,6 @@ import type { ChartDataRow, ChartContext } from "@/types";
  * @returns void
  */
 export const renderCursor = (ctx: ChartContext, row: ChartDataRow): void => {
-  console.log("Hello", ctx.isStatic);
   if (ctx.isStatic) return;
 
   const seriesGroup = ctx.selection
@@ -76,8 +75,8 @@ export const setupCursorEvents = (ctx: ChartContext): void => {
     const isInChartArea =
       mouseX >= xMinRange &&
       mouseX <= xMaxRange &&
-      mouseY >= yMaxRange &&
-      mouseY <= yMinRange;
+      mouseY >= yMinRange &&
+      mouseY <= yMaxRange;
 
     if (!isInChartArea) {
       ctx.selection.selectAll(".cursor").classed("hidden", true);
