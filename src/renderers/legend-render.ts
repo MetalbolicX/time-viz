@@ -36,8 +36,8 @@ export const renderLegend = (ctx: ChartContext): void => {
         .attr("class", "legend-square")
         .attr("x", 0)
         .attr("y", 0)
-        .attr("width", 12)
-        .attr("height", 12)
+        .attr("width", 14)
+        .attr("height", 14)
         .style("fill", ({ color, label }) => color || ctx.colorScale(label));
 
       group
@@ -45,7 +45,7 @@ export const renderLegend = (ctx: ChartContext): void => {
         .data(d => [d])
         .join("text")
         .attr("class", "legend-label")
-        .attr("x", 16)
+        .attr("x", 24)
         .attr("y", 10)
         .text(({ label }) => label)
     });

@@ -75,7 +75,7 @@ export const renderYAxisLabel = (ctx: ChartContext): void => {
     .data([ctx.yAxisLabel])
     .join("text")
     .attr("class", "y axis-label")
-    .attr("x", -ctx.margin.left)
+    .attr("x", 0 * ctx.margin.left)
     .attr("y", ctx.margin.top)
     .attr("transform", `rotate(-90, ${ctx.margin.left}, ${ctx.margin.top})`)
     .attr("dy", "1em")

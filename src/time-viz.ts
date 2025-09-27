@@ -255,7 +255,8 @@ export class TimeViz extends HTMLElement {
     // Parse initial attributes
     const attributeConfig = ConfigurationManager.createFromAttributes(this);
     this.#chartConfig = ConfigurationManager.mergeConfigs(
-      this.#chartConfig, attributeConfig
+      this.#chartConfig,
+      attributeConfig
     );
     this.#addEventListeners();
     this.render();
@@ -286,7 +287,8 @@ export class TimeViz extends HTMLElement {
 
     const attributeConfig = ConfigurationManager.createFromAttributes(this);
     this.#chartConfig = ConfigurationManager.mergeConfigs(
-      ConfigurationManager.getDefaultConfig(), attributeConfig
+      ConfigurationManager.getDefaultConfig(),
+      attributeConfig
     );
     this.#eventEmitter.emit("config-changed", { config: this.#chartConfig });
     this.render();
@@ -303,7 +305,9 @@ export class TimeViz extends HTMLElement {
 
     // Calculate date range using DataService
     if (DataService.validateDataSet(this._data)) {
-      const dateDomain = DataService.getDataDomain(this._data, [this._config.xSerie.accessor as any]);
+      const dateDomain = DataService.getDataDomain(this._data, [
+        this._config.xSerie.accessor as any,
+      ]);
       if (dateDomain) {
         const [minTime, maxTime] = dateDomain;
         const minDate = new Date(minTime);
@@ -316,7 +320,10 @@ export class TimeViz extends HTMLElement {
     }
 
     // Emit data change event
-    this.#eventEmitter.emit("data-changed", { data: this._data, timestamp: Date.now() });
+    this.#eventEmitter.emit("data-changed", {
+      data: this._data,
+      timestamp: Date.now(),
+    });
     this.render();
   }
 
@@ -403,7 +410,7 @@ export class TimeViz extends HTMLElement {
     // Emit series change event
     this.#eventEmitter.emit("series-changed", {
       selectedSeries: this._selectedSeries,
-      hiddenSeries: this._hiddenSeries
+      hiddenSeries: this._hiddenSeries,
     });
 
     this.#renderChart();
